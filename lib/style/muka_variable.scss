@@ -1,1 +1,21 @@
 $color_blue: #1890ff;
+$color_gray: #ccc;
+$color_white: #FFFFFF;
+
+/* 提示类颜色 */
+$color_error: #f5222d;
+$color_success: #52c41a;
+$color_warning: #faad14;
+$color_info: $color_blue;
+
+/* 组件样式 */
+
+
+/**
+    Input
+**/
+
+$input_padding__topBottom: 4px;
+$input_padding__leftRight: 11px;
+$input_height: 30px;
+$input_border: 1px solid $color_gray;
