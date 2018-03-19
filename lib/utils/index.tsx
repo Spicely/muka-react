@@ -1,13 +1,7 @@
 import * as React from 'react'
-import * as PropTypes from 'prop-types'
-import omit from 'omit.js'
+import { json } from 'muka'
 
 class Component extends React.Component<any, any> {
-    static propTypes = {
-        onClick: PropTypes.func,
-        onMouseEnter: PropTypes.func,
-        onMouseLeave: PropTypes.func
-    }
     protected slots: string[] = []
     protected slotsNode: {default: JSX.Element[]} = {
         default: []
@@ -16,7 +10,7 @@ class Component extends React.Component<any, any> {
     protected styles: object = {}
     protected getRootNode(viewNode: JSX.Element): JSX.Element {
         const style = Object.assign({}, this.styles, this.props.style)
-        const otherProps = omit(this.props, ['className', 'style', 'children'])
+        const otherProps = json.omit(this.props, ['className', 'style', 'children'])
         return (
             <div {...otherProps} className={this.getClassName()} style={style} >
                 {viewNode}

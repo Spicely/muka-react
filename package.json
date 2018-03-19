@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@types/react": "^16.0.40",
+    "muka": "0.1.8",
+    "react": "^16.2.0",
+    "tslint-react": "^3.5.1"
+  }
+}
