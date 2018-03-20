@@ -1,21 +1,8 @@
 import { Component, React }  from '../utils'
-// import { ChangeEventHandler } from 'react'
-import omit from 'omit.js'
-import * as PropTypes from 'prop-types'
+import { json, type } from 'muka'
 import './index.scss'
 
 export default class Input extends Component {
-    static defaultProps = {
-        onFocus: function() { return },
-        onBlur: function() { return }
-    }
-    static propTypes = {
-        onPressEnter: PropTypes.func,
-        onKeyDown: PropTypes.func,
-        onKeyUp: PropTypes.func,
-        onFocus: PropTypes.func,
-        onBlur: PropTypes.func
-    }
     public state = {
         value: ''
     }
@@ -24,18 +11,15 @@ export default class Input extends Component {
         return this.getRootNode(this.viewNode())
     }
     private viewNode(): JSX.Element {
-       // console.log(...arg)
         this.createSlots()
-        const otherProps = omit(this.props, ['style', 'className', 'children'])
+        const otherProps = json.omit(this.props, ['style', 'className', 'children'])
         return (
-            <div>
+            <div className={this.getClassName()}>
                 <div className="flex">
                     <input
                         className="mk_input_view"
                         {...otherProps}
-                        onBlur={this.props.onBlur}
                         value={this.state.value}
-                        onFocus={this.props.onFocus}
                         onChange={this.handleChange}
                     />
                 </div>
@@ -44,9 +28,11 @@ export default class Input extends Component {
         )
     }
     private handleChange = (e: any): void => {
-        console.log(e)
+        const value = e.target.value
         this.setState({
-            value: e.target.value
+            value: value
+        }, () => {
+            type.func(this.props.onChange) && this.props.onChange(value)
         })
     }
 }
