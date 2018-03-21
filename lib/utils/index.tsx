@@ -1,7 +1,11 @@
 import * as React from 'react'
 import { json } from 'muka'
 
-class Component extends React.Component<any, any> {
+interface UtilsProps {
+    className?: string,
+    style?: object
+}
+class Component<P = UtilsProps, S = {}> extends React.Component<P, S> {
     protected slots: string[] = []
     protected slotsNode: {default: JSX.Element[]} = {
         default: []

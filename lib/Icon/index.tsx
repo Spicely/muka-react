@@ -2,13 +2,18 @@ import { React, Component } from '../utils'
 import { json } from 'muka'
 import '../style/font-awesome/font-awesome.scss'
 
+interface IconProps {
+    color?: string,
+    type?: string
+}
+
 let allocation: object = {
     fontClass: 'fa',
     fontSize: 14,
     color: '#FFFFFF',
     prefixClass: 'fa-'
 }
-export default class Icon extends Component {
+export default class Icon extends Component<IconProps> {
     static setConfig (config: object = {}) {
         allocation = json.assign(allocation, config)
     }

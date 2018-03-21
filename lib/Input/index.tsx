@@ -1,8 +1,14 @@
 import { Component, React }  from '../utils'
 import { json, type } from 'muka'
-import './index.scss'
 
-export default class Input extends Component {
+interface InputProps {
+    onChange: (value: string) => {}
+}
+
+export default class Input extends Component<InputProps> {
+    static defaultProps = {
+        onChange: (value: string) => {}
+    }
     public state = {
         value: ''
     }

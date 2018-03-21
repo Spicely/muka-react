@@ -1,0 +1,17 @@
+.mk_dropdown {
+    display: inline;
+    position: relative;
+}
+
+.mk_dropdown_placement {
+    position: absolute;
+    top: 0;
+    z-index: 9;
+    &_view {
+        position: relative;
+        overflow: hidden;
+        padding: 10px 0;
+        border-radius: 5px;
+        background: #FFF;
+    }
+}
