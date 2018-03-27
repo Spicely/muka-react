@@ -1,12 +1,12 @@
 import { React, Component } from '../utils'
-import CheckView from './CheckView'
+import CheckList from './CheckList'
 
 interface CheckBoxProps {
 
 }
 
 export default class CheckBox extends Component<CheckBoxProps> {
-    static CheckView: CheckView
+    static list = CheckList
     protected className: string = 'mk_checkbox'
     public render() {
         return (
