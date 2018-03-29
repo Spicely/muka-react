@@ -19,28 +19,27 @@ export default class CheckList extends Component<CheckListProps> {
         options: [],
         multiselect: true
     }
-    className = 'mk_checkList'
-    state = {
+    protected className = 'mk_checkList'
+    public state = {
         options: this.props.options.map((item) => {
             item.status = false
             return item
         }),
         values: this.props.vaule || []
     }
-
-    render() {
+    public render() {
         return (
             <div className={this.getClassName()} style={{height: this.props.height}}>
                 {this.getCheckItems()}
             </div>
         )
     }
-    componentWillReceiveProps(nextProps: CheckListProps) {
+    public componentWillReceiveProps(nextProps: CheckListProps) {
         this.setState({
             values: nextProps.vaule
         })
     }
-    getCheckItems() {
+    private getCheckItems() {
         return this.state.options.map((item, index) => {
             let className = this.state.values.indexOf(item.value) !== -1 ? 'mk_selected' : ''
             return (
@@ -62,12 +61,13 @@ export default class CheckList extends Component<CheckListProps> {
             )
         })
     }
-    getIconNode(status: boolean) {
+    private getIconNode(status: boolean): JSX.Element | undefined {
         if (status) {
             return <Icon type='check'/>
         }
+        return
     }
-    handleClick(value: string, callBack: (value: any[]) => {}) {
+    private handleClick(value: string, callBack: (value: any[]) => {}) {
         const state = this.state
         let indexOf = state.values.indexOf(value)
         let data = state.values.concat()

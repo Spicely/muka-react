@@ -1,7 +1,7 @@
 import { React, Component } from '../utils'
 import * as ReactDom from 'react-dom'
 
-export default class SoDropDown extends Component<any> {
+export default class DropDown extends Component<any> {
     static defaultProps = {
         trigger: ['click']
     }
