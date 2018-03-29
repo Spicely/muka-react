@@ -5,39 +5,51 @@ import Icon from '../Icon'
 interface CheckListProps {
     options: {label: string, value: string | number, status: boolean}[],
     width?: number | string,
-    defaultVaule?: any[]
+    height?: number | string,
+    vaule?: any[],
+    multiselect?: boolean,
     onChange: (value: any[]) => {}
 }
 
 export default class CheckList extends Component<CheckListProps> {
     static defaultProps = {
-        width: 160,
-        defaultVaule: [],
-        options: []
+        height: 150,
+        onChange: (value: any[]) => {},
+        vaule: [],
+        options: [],
+        multiselect: true
     }
-    protected className: string = 'mk_checklist'
-    public state = {
+    className = 'mk_checkList'
+    state = {
         options: this.props.options.map((item) => {
             item.status = false
             return item
         }),
-        values: this.props.defaultVaule || []
+        values: this.props.vaule || []
     }
-    public render() {
+
+    render() {
         return (
-            <div className={this.getClassName()} style={{
-                width: this.props.width
-            }}>
+            <div className={this.getClassName()} style={{height: this.props.height}}>
                 {this.getCheckItems()}
             </div>
         )
     }
-    private getCheckItems(): JSX.Element[] {
+    componentWillReceiveProps(nextProps: CheckListProps) {
+        this.setState({
+            values: nextProps.vaule
+        })
+    }
+    getCheckItems() {
         return this.state.options.map((item, index) => {
+            let className = this.state.values.indexOf(item.value) !== -1 ? 'mk_selected' : ''
             return (
                 <div
-                    className={`${this.className}_item ${this.state.values.indexOf(item.value) !== -1 ? 'mk_selected' : ''} flex`}
+                    className={`${this.className}_item ${className} flex`}
                     onClick={this.handleClick.bind(this, item.value, this.props.onChange)}
+                    style={{
+                        width: this.props.width
+                    }}
                     key={index}
                 >
                     <div className={`${this.className}_item_label flex_1`}>
@@ -50,24 +62,25 @@ export default class CheckList extends Component<CheckListProps> {
             )
         })
     }
-    private getIconNode(status: boolean): JSX.Element | undefined {
+    getIconNode(status: boolean) {
         if (status) {
             return <Icon type='check'/>
         }
-        return
     }
-    private handleClick(value: any, callBack: (value: any[]) => {}) {
-        let indexOf: number = this.state.values.indexOf(value)
-        let data: any[] = this.state.values.concat()
+    handleClick(value: string, callBack: (value: any[]) => {}) {
+        const state = this.state
+        let indexOf = state.values.indexOf(value)
+        let data = state.values.concat()
         if (indexOf !== -1) {
             data.splice(indexOf, 1)
         } else {
             data.push(value)
         }
         this.setState({
-            values: data
+            values: this.props.multiselect ? data : [data.pop()]
         }, () => {
-            type.func(callBack) && callBack(this.state.values)
+           type.func(callBack) && callBack(this.state.values)
         })
     }
 }
+
