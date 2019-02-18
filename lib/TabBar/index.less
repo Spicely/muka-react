@@ -1,16 +1,27 @@
-.L_tabbar {
-    position: fixed;
-    width: 100%;
-    bottom: 0;
-    &_icon {
-        height: 1.1rem;
-        width: 1.1rem;
+@tab_height: 45 * @unit;
+.@{prefix}tab_bar {
+    height: @tab_height;
+    background: @theme_bg_color;
+    transition: all .1s cubic-bezier(0.65, 0.05, 0.36, 1);
+    position: relative;
+    overflow: hidden;
+    box-sizing: border-box;
+    .@{prefix}tab_item {
+        padding-top: 6 * @unit;
+        &_icon {
+            height: @tab_height * 0.6 - 6 * @unit;
+            img {
+                height: 100%;
+            }
+        }
+        &_label {
+            height: @tab_height * 0.4;
+            font-size: 10 * @unit;
+        }
     }
-    &_content {
+    &.fixed {
         position: fixed;
-        height: calc(~'100% - 2.25rem');
+        bottom: 0;
         width: 100%;
-        top:0;
-        overflow: auto;
     }
 }

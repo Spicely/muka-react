@@ -1,0 +1,77 @@
+.@{prefix}menu {
+    background-color: #fff;
+    &_item {
+        height: 40 * @unit;
+        line-height: 40 * @unit;
+        color: rgba(@theme_ft_color, 0.7);
+        position: relative;
+        &::after {
+            content: '';
+            height: 100%;
+            left: 0;
+            width: 0;
+            top: 0;
+            position: absolute;
+            background-color: @theme_color;
+        }
+        &::before {
+            content: '';
+            height: 100%;
+            width: 0%;
+            .transition;
+            position: absolute;
+        }
+        &.active {
+            color: @theme_ft_color;
+            &::after {
+                width: 2 * @unit;
+            }
+            &::before {
+                width: 100%;
+                background: rgba(@theme_color, 0.2);
+            }
+            .@{prefix}menu_item__label_icon {
+                color: @theme_color;
+            }
+        }
+        &__label {
+            height: 100%;
+            padding: 0 18 * @unit;
+            cursor: pointer;
+            &:hover {
+                .transition;
+                color: @theme_ft_color;
+            }
+            &_icon {
+                margin-right: 10 * @unit;
+                width: 20 * @unit;
+            }
+        }
+    }
+    &_group {
+        // height: 40 * @unit;
+        line-height: 40 * @unit;
+        color: rgba(@theme_ft_color, 0.7);
+        position: relative;
+        padding: 0 18 * @unit;
+        cursor: pointer;
+        &_title li:first-child:hover {
+            .transition;
+            color: @theme_ft_color;
+        }
+        &_title__icon {
+            margin-right: 10 * @unit;
+            width: 20 * @unit;
+        }
+        &_content {
+            transition: 0.5s all;
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+        .active {
+            height: 100%;
+            opacity: 1;
+        }
+    }
+}

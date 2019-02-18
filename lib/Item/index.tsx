@@ -1,13 +1,19 @@
 import * as React from 'react'
 import { withRouter, RouteComponentProps } from 'react-router-dom'
+import { isBool, isString, isFunc } from 'muka'
+import Icon from '../Icon'
 import { getClassName } from '../utils'
 
-interface IProps extends RouteComponentProps<any> {
+export interface IProps extends RouteComponentProps<any> {
     activeClass?: string
     className?: string
-    title: string | JSX.Element | JSX.ElementClass
-    link?: string
+    title?: string | JSX.Element | JSX.ElementClass
+    link?: string | boolean
     value?: string | JSX.Element | JSX.ElementClass
+    extend?: string | JSX.Element | JSX.ElementClass
+    icon?: string | JSX.Element | JSX.ElementClass
+    onPress?: () => void
+    lineType?: 'solid' | 'dashed'
 }
 
 interface IState {
@@ -18,7 +24,7 @@ class Item extends React.Component<IProps, IState> {
 
     public static defaultProps = {
         activeClass: 'active',
-        title: ''
+        title: '',
     }
 
     public state = {
@@ -27,36 +33,56 @@ class Item extends React.Component<IProps, IState> {
 
     private link: boolean = false
 
-    private node: HTMLDivElement
+    private moveNum: number = 0
+
+    private node: HTMLDivElement | null = null
 
     public render(): JSX.Element {
-        const { activeClass, className, title, value } = this.props
+        const { activeClass, lineType, className, extend, title, value, link } = this.props
         const { active } = this.state
         const activeClassName = active ? activeClass : ''
         return (
             <div
-                className={getClassName(`item flex_justify ${activeClassName}`, className)}
+                className={getClassName(`item flex_justify${link ? ` ${activeClassName}` : ''} line_${lineType || 'solid'}`, className)}
                 ref={(event: HTMLDivElement) => { this.node = event }}
-                // onClick={this.handleActive}
+                onClick={this.handlePress}
                 onTouchStart={this.handleAddActive}
+                onTouchMove={this.handleMove}
                 onTouchEnd={this.handleRemoveActive}
             >
                 <div className="flex">
-                    <div className={getClassName('item_title flex_1')}>{title}</div>
-                    <div className={getClassName('item_right')}>
+                    <div className={getClassName('item_title flex_1 flex_justify')}>{title}</div>
+                    <div className={getClassName('item_right flex_justify')}>
                         {value}
                     </div>
+                    {this.getLinkNode()}
                 </div>
+                {extend}
             </div>
         )
     }
 
     public componentDidMount() {
-        this.node.addEventListener('transitionend', this.closeAnimation)
+        if (this.node) {
+            this.node.addEventListener('transitionend', this.closeAnimation)
+        }
     }
 
     public componentWillUnmount() {
-        this.node.removeEventListener('transitionend', this.closeAnimation)
+        if (this.node) {
+            this.node.removeEventListener('transitionend', this.closeAnimation)
+        }
+    }
+
+    private getLinkNode(): JSX.Element | void {
+        const { link, icon } = this.props
+        if (link) {
+            return (
+                <div className={getClassName('item_link flex_justify')}>
+                    {icon || <Icon className={getClassName('item_link__icon')} icon="ios-arrow-forward"  color="rgba(0, 0, 0, 0.5)"/>}
+                </div>
+            )
+        }
     }
 
     private closeAnimation = () => {
@@ -72,6 +98,11 @@ class Item extends React.Component<IProps, IState> {
     }
 
     private handleAddActive = () => {
+        const { link } = this.props
+        if (isBool(link) && link) {
+            return
+        }
+        this.moveNum = 0
         this.link = false
         this.setState({
             active: true
@@ -85,9 +116,20 @@ class Item extends React.Component<IProps, IState> {
         })
     }
 
+    private handleMove = (e: any) => {
+        this.moveNum = e.targetTouches[0].clientY
+    }
+
+    private handlePress = () => {
+        const { onPress } = this.props
+        if (isFunc(onPress)) {
+            onPress()
+        }
+    }
+
     private moveToView() {
         const { link, history } = this.props
-        if (link) {
+        if (isString(link) && this.moveNum === 0) {
             history.push(link)
         }
     }

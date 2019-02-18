@@ -2,8 +2,54 @@
     height: 40 * @unit;
     transition: all .1s cubic-bezier(0.65, 0.05, 0.36, 1);
     border: none;
+    border-radius: @radius;
     background: initial;
-    &.circle {
+    border: 1 * @unit solid #ddd;
+    outline: none;
+    cursor: pointer;
+
+    &.btn_circle {
         border-radius: 50%;
+        padding: 0;
+        width: 40 * @unit;
+    }
+
+    &.btn_error {
+        color: @error_color  !important;
+        border-color: @error_color;
+        background: #ffe4e8;
+    }
+
+    &.btn_primary {
+        min-width: 78 * @unit;
+        background: @theme_color;
+        color: #fff;
+        cursor: pointer;
+
+        &:hover {
+            background: rgba(@theme_color, 0.8);
+        }
+    }
+
+    &.fixed {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        border-radius: 0;
+        border: none;
+        background: @theme_color;
+    }
+
+    &.disabled {
+        background: #c8c8c8 !important;
+        border-color: #c8c8c8 !important;
+    }
+
+    &_loading {
+        vertical-align: middle;
+        position: relative;
+        top: -2 * @unit;
+        right: 5 * @unit;
     }
 }

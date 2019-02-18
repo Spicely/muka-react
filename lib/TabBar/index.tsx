@@ -1,84 +1,61 @@
-import { TabBar } from 'antd-mobile'
-import React, { Component } from 'react'
-import './index.less'
+import * as React from 'react'
+import { getClassName } from '../utils'
+import TabItem from './TabItem'
 
-const TabItem = TabBar.Item
-
-export interface ITabBarList {
-    // 默认图片
-    bgImg: any
-    // 选中后图片
-    bgSelectImg?: any
-    label: string
-    key: string
-    component?: JSX.ElementClass | JSX.Element
+const defaultValue = {
+    selectIndex: 0,
+    setSelected: (index?: any) => { return },
+    onChange: (field?: string | number) => { return }
 }
+export const { Consumer, Provider } = React.createContext(defaultValue)
 
 interface IProps {
-    lists: ITabBarList[]
-    defaultSelect?: string
+    className?: string
+    style?: React.CSSProperties
+    fixed?: boolean
+    onChange?: (field?: string | number) => void
 }
 
-interface IState {
-    selectedTab: string
-}
+export default class LTabBar extends React.Component<IProps, any> {
 
-export default class LTabBar extends Component<IProps, IState> {
+    public static Item = TabItem
 
-    public static defaultProps = {
-        lists: []
+    public static defaultProps: IProps = {
+        fixed: false
     }
 
-    public constructor(props: IProps) {
-        super(props)
-        this.state = {
-            selectedTab: props.defaultSelect || ''
-        }
+    public state = {
+        selectIndex: 0
     }
 
     public render(): JSX.Element {
-        const { selectedTab } = this.state
-        const { lists } = this.props
+        const { className, children, style, fixed, onChange } = this.props
         return (
-            <div className="L_tabbar">
-                <TabBar
-                    className="L_tabbar_tab"
+            <div className={getClassName(`tab_bar flex${fixed ? ' fixed' : ''}`, className)} style={style}>
+                <Provider
+                    value={{
+                        ...this.state,
+                        setSelected: this.handleSelected,
+                        onChange: onChange ? onChange : (field?: string | number) => { return }
+                    }}
                 >
                     {
-                        lists.map((item: ITabBarList, index: number) => {
-                            return <TabItem
-                                title={item.label}
-                                key={item.key}
-                                icon={<div
-                                    className="L_tabbar_icon"
-                                    style={{
-                                        background: `url(${item.bgImg}) center center /  1.1rem 1.1rem no-repeat`,
-                                    }}
-                                />}
-                                onPress={this.handlePress.bind(this, item.key)}
-                                selected={selectedTab === item.key}
-                                selectedIcon={<div
-                                    className="L_tabbar_icon"
-                                    style={{
-                                        background: `url(${item.bgSelectImg}) center center /  1.1rem 1.1rem no-repeat`,
-                                    }}
-                                />}
-                            >
-                                <div className="L_tabbar_content">
-                                    {item.component}
-                                </div>
-
-                            </TabItem>
+                        React.Children.map(children, (item: any, index: number) => {
+                            if (item.type === TabItem) {
+                                const field = item.props.field
+                                return React.cloneElement(item, { field: field ? field : index + 1, onChange })
+                            }
+                            return item
                         })
                     }
-                </TabBar>
+                </Provider>
             </div>
         )
     }
 
-    private handlePress(key: string) {
+    private handleSelected = (index?: number) => {
         this.setState({
-            selectedTab: key
+            selectIndex: index
         })
     }
 }

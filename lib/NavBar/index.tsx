@@ -1,185 +1,61 @@
-import { Icon, Modal, NavBar, Popover } from 'antd-mobile'
-import { isArray, isFunction } from 'lodash'
-import React, { Component } from 'react'
-import { withRouter } from 'react-router-dom'
-import { Link, RouteComponentProps } from 'react-router-dom'
-import share from '../../assets/share.png'
-import './index.less'
+import * as React from 'react'
+import { withRouter, RouteComponentProps } from 'react-router'
+import { isNumber } from 'muka'
+import { getClassName } from '../utils'
+import Icon from '../Icon'
 
-export interface ILNavBarPopover {
-    label: string
-    icon?: JSX.Element
-    onPress?: () => void
-    link?: string
-}
-
-export interface IShareData {
-    url: string
-    title: string
-    onPress?: () => void
-}
-
-interface ILNavBarProps extends RouteComponentProps<any> {
-    rightMenus?: Array<'menu' | 'share'>
-    rightContent?: JSX.Element | JSX.ElementClass | JSX.Element[]
-    menuOverlay?: ILNavBarPopover[]
-    icon?: JSX.Element
-    title?: string | JSX.Element | JSX.ElementClass
-    shareData?: IShareData[]
+interface IProps extends RouteComponentProps<any> {
     className?: string
-    style?: React.CSSProperties
+    left?: string | JSX.Element | JSX.ElementClass
+    title?: string | JSX.Element | JSX.ElementClass
+    right?: string | JSX.Element | JSX.ElementClass
+    fixed?: boolean
+    endVal?: number
+    divider?: boolean
 }
 
-interface ILNavBarState {
-    visible: boolean
-    visibleShare: boolean
-}
+class NavBar extends React.Component<IProps, any> {
 
-const Item = Popover.Item
-
-class LNavBar extends Component<ILNavBarProps, ILNavBarState> {
     public static defaultProps = {
-        className: '',
-        menuOverlay: [],
-        rightMenus: [],
-        shareData: [
-            { url: 'OpHiXAcYzmPQHcdlLFrc', title: '发送给朋友' },
-            { url: 'wvEzCMiDZjthhAOcwTOu', title: '新浪微博' },
-            { url: 'cTTayShKtEIdQVEMuiWt', title: '生活圈' },
-            { url: 'umnHwvEgSyQtXlZjNJTt', title: '微信好友' },
-            { url: 'SxpunpETIwdxNjcJamwB', title: 'QQ' }
-        ],
-        title: ''
+        divider: true
     }
 
-    public state: ILNavBarState = {
-        visible: false,
-        visibleShare: false
-    }
-
-    public render(): JSX.Element {
-        const { className, title, shareData, rightContent, style } = this.props
-        const { visibleShare } = this.state
+    public render() {
+        const { className, left, divider, title, right, fixed } = this.props
         return (
-            <NavBar
-                className={`navbar ${className}`}
-                mode="light"
-                icon={this.getIcon()}
-                rightContent={rightContent || this.getRightContent()}
-                style={style}
-            >{title}
-                <Modal
-                    popup={true}
-                    visible={visibleShare}
-                    animationType="slide-up"
-                    maskClosable={true}
-                    onClose={this.handleShareCancel}
-                >
-                    <div className="navbar_share_title">分享到</div>
-                    <div className="navbar_share">
-                        {isArray(shareData) && shareData.map((item: IShareData, index: number) => {
-                            return (<div className="navbar_share_item" key={index} onClick={this.handleShareItem.bind(this, item.onPress)}>
-                                <img src={`https://gw.alipayobjects.com/zos/rmsportal/${item.url}.png`} alt={item.title} style={{ width: 36 }} />
-                                <div className="navbar_share_item_label">{item.title}</div>
-                            </div>
-                            )
-                        })}
+            <div
+                className={`${getClassName(`nav_bar${divider ? ' divider' : ''} flex_justify${fixed ? ' fixed' : ''}`, className)}`}
+            >
+                <div className="flex">
+                    <div className={getClassName('nav_bar_left', 'flex_justify')}>
+                        {left ? left : <Icon icon="ios-arrow-back-outline" onClick={this.handleBack} />}
                     </div>
-                    <div className="navbar_share_cancel" onClick={this.handleShareCancel}>取消</div>
-                </Modal>
-            </NavBar>
+                    <div className={getClassName('nav_bar_title flex_1', 'flex_justify')}> {title}</div>
+                    <div className={getClassName('nav_bar_right', 'flex_justify')}> {right} </div>
+                </div>
+            </div>
         )
     }
 
-    private getIcon = (): JSX.Element => {
-        const { icon } = this.props
-        if (icon) {
-            return icon
+    public componentDidMount() {
+        const { fixed } = this.props
+        if (fixed) {
+            window.addEventListener('scroll', this.handleScroll)
         }
-        return <Icon type="left" onClick={this.handleBack} />
     }
 
-    private getRightContent(): JSX.Element[] | undefined {
-        const { rightMenus } = this.props
-        const { visible } = this.state
-        if (isArray(rightMenus)) {
-            return rightMenus.map((item: string) => {
-                switch (item) {
-                    case 'menu': return (
-                        <Popover
-                            key="menu"
-                            visible={visible}
-                            overlay={this.getPopover()}
-                            onSelect={this.handleSelect}
-                        >
-                            <Icon type="ellipsis" />
-                        </Popover>
-                    )
-                    case 'share': return <img className="navbar_img" key="share" src={share} onClick={this.handleShare} />
-                    default: return <div />
-                }
-            })
+    private handleScroll = () => {
+        const { endVal } = this.props
+        const top = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop
+        if (isNumber(endVal)) {
+            console.log(top)
         }
-        return undefined
-    }
 
-    private getPopover() {
-        const { menuOverlay } = this.props
-        if (!menuOverlay) {
-            return undefined
-        }
-        return menuOverlay.map((item: ILNavBarPopover, index: number): JSX.Element => {
-            return (
-                <Link to={item.link || ''} key={index} replace={true}>
-                    <Item
-                        icon={item.icon}
-                    >
-                        {item.label}
-                    </Item>
-                </Link>
-            )
-
-        })
     }
 
     private handleBack = () => {
         const { history } = this.props
         history.goBack()
     }
-
-    private handleSelect = (node: any, index: number): void => {
-        const { menuOverlay } = this.props
-        this.setState({
-            visible: false
-        })
-        console.log(this.props)
-        if (menuOverlay && menuOverlay[index]) {
-            if (isFunction(menuOverlay[index].onPress)) {
-                // menuOverlay[index].onPress()
-            }
-        }
-    }
-
-    private handleShare = () => {
-        this.setState({
-            visibleShare: true
-        })
-    }
-
-    private handleShareItem(callback: () => void) {
-        if (isFunction(callback)) {
-            callback()
-        }
-        this.setState({
-            visibleShare: false
-        })
-    }
-
-    private handleShareCancel = () => {
-        this.setState({
-            visibleShare: false
-        })
-    }
 }
-
-export default withRouter(LNavBar)
+export default withRouter(NavBar)

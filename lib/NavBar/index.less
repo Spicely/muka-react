@@ -1,48 +1,21 @@
-@import '../../styles/variable.less';
-.navbar {
-    &_img {
-        width: @navbar_icon__size;
-        height: @navbar_icon__size;
-        margin: @navbar_icon__margin
+.@{prefix}nav_bar {
+    background: #fff;
+    height: 45 * @unit;
+    padding: 0 14 * @unit;
+    box-sizing: border-box;
+    z-index: 8;
+    &.fixed {
+        top: 0;
     }
-    &_share {
-        display: flex;
-        flex-wrap: wrap;
-        &_item {
-            @diff: @navbar_share__pading * 2;
-            width: calc(~'25% - @{diff}');
-            padding: @navbar_share__pading;
-            white-space: nowrap;
-            img {
-                width: 1.8rem;
-            }
-            &_label{
-                font-size: @navbar_share__label__ftSize;
-            }
-        }
+    &_left {
+        padding-right: 10 * @unit;
+        min-width: 1.4rem;
     }
-    &_share_title {
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
-        align-items: center;
-        height: @navbar_share_cancel__height;
+    &_title {
+        text-align: center;
     }
-    &_share_cancel {
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
-        align-items: center;
-        height: @navbar_share_cancel__height;
-        position: relative;
-        &::after {
-            content: "";
-            position: absolute;
-            height: 1 * @hd;
-            width: 90%;
-            background: #000;
-            top: 0;
-            left: 5%;
-        }
+    &_right {
+        padding-left: 10 * @unit;
+        min-width: 1.4rem;
     }
 }

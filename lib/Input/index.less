@@ -1,0 +1,46 @@
+@height: 35 * @unit + 18 * @unit;
+.@{prefix}input {
+    height: 35 * @unit;
+    position: relative;
+    &.active {
+        height: @height;
+        input {
+            @diff: 18 * @unit;
+            top: @diff;
+            height: calc(100% - @diff);
+        }
+    }
+    &_text {
+        height: 18 * @unit;
+        font-size: 12 * @unit;
+        position: absolute;
+        @top: @height / 2 - 12 * @unit / 2;
+        transform: translate(0, @top);
+        color: #888888;
+        pointer-events: none;
+        z-index: 1;
+        .transition;
+        &.active {
+            transform: translate(0, 0);
+            color: #333333;
+        }
+    }
+    input {
+        border: none;
+        outline: none;
+        height: 100%;
+        width: 100%;
+        position: relative;
+        border-bottom: 1 * @unit solid #e8e8e8;
+        .transition;
+        &:focus {
+            border-color: @theme_color;
+        }
+    }
+    &_close_icon {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translate(0, -50%);
+    }
+}
