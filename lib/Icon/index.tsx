@@ -3,7 +3,7 @@ import icons from './icons'
 import { getClassName } from '../utils'
 
 interface IProps extends React.HtmlHTMLAttributes<any> {
-    icon?: string // 'logo-google' | 'ios-refresh' | 'md-refresh' | 'ios-document' | 'md-document' | 'md-refresh'
+    icon?: 'logo-google' | 'ios-refresh' | 'md-refresh' | 'ios-document' | 'md-document' | 'md-refresh' | 'md-more' | 'md-arrow-down' | 'ios-image' | 'ios-more' | 'ios-arrow-back-outline'| 'ios-paper-plane' | 'ios-arrow-down-outline' | 'ios-arrow-forward' | 'input_close_icon' | 'input_close_icon' | 'md-close-circle' | 'ios-arrow-down' | 'md-thumbs-up' | 'md-thumbs-down'
     fontSize?: string
     color?: string
     style?: React.CSSProperties

@@ -43,7 +43,7 @@ export default class Input extends React.Component<IProps, IState> {
                     onChange={this.handleChange}
                     {...otherProps}
                 />
-                {(value || val) && iconShow && <Icon className={getClassName('input_close_icon')} onClick={this.handleClose} icon="error" />}
+                {(value || val) && iconShow && <Icon className={getClassName('input_close_icon')} onClick={this.handleClose} icon="md-close-circle" />}
 
             </div>
         )
