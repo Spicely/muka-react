@@ -1,14 +1,14 @@
 import * as React from 'react'
-import { isBool, isFunc } from 'muka'
+import { isBool, isFunction } from 'muka'
 import { getClassName } from '../utils'
 
-interface IProps {
+export interface ISwitchProps {
     className?: string
     checked?: boolean
     onChange?: (status?: boolean) => void
 }
 
-export default class Switch extends React.Component<IProps, any> {
+export default class Switch extends React.Component<ISwitchProps, any> {
     public state = {
         active: false
     }
@@ -27,7 +27,7 @@ export default class Switch extends React.Component<IProps, any> {
         this.setState({
             active: isBool(checked) ? !checked : !active
         })
-        if (isFunc(onChange)) {
+        if (isFunction(onChange)) {
             onChange(isBool(checked) ? !checked : !active)
         }
     }

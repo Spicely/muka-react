@@ -1,19 +1,21 @@
 
-import * as React from 'react'
+import React, { Component, CSSProperties } from 'react'
 import { PreLoad, browser } from 'muka'
 import { getClassName } from '../utils'
+import { Consumer } from '../ScrollView'
 
-interface IProps {
+export interface IImageProps {
     className?: string
-    src?: string
-    style?: React.CSSProperties
+    src?: string | ArrayBuffer | null
+    style?: CSSProperties
     offsetBottom?: number
     controller?: Element
     loadingIndicatorSource?: string
+    onClick?: () => void
 }
 
 interface IState {
-    uri?: string
+    uri?: string | ArrayBuffer | null
     animation: boolean
     show: boolean
 }
@@ -26,7 +28,7 @@ export const setImageLoadingSource = (uri: string) => {
     imgObj.src = uri
 }
 
-export default class Image extends React.Component<IProps, IState> {
+export default class Image extends Component<IImageProps, IState> {
 
     public static defaultProps = {
         offsetBottom: 100
@@ -42,19 +44,39 @@ export default class Image extends React.Component<IProps, IState> {
 
     private controller: any
 
+    private loading?: PreLoad
+
     public render(): JSX.Element {
-        const { className, style, loadingIndicatorSource } = this.props
+        const { className, style, loadingIndicatorSource, onClick, controller } = this.props
         const { animation, uri, show } = this.state
         const opacity = uri || loadingIndicatorSource
-        return <img className={getClassName(`image${opacity ? '' : ' opacity'}${animation && !show ? ' an_fadeIn' : ''}${show ? ' show' : ''}`, className)} src={uri || loadingIndicatorSource || imgObj.src} ref={(e: HTMLImageElement) => { this.imageNode = e }} style={style} />
+        return (
+            <Consumer>
+                {
+                    (val) => {
+                        this.controller = controller || val.controller
+                        return (
+                            <img className={getClassName(`image${opacity ? '' : ' opacity'}${animation && !show ? ' an_fadeIn' : ''}${show ? ' show' : ''}`, className)} src={uri || loadingIndicatorSource || imgObj.src} onClick={onClick} ref={(e: HTMLImageElement) => { this.imageNode = e }} style={style} />
+                        )
+                    }
+                }
+            </Consumer>
+        )
     }
 
-    public componentWillReceiveProps(nextProps: any) {
+    public componentWillReceiveProps(nextProps: IImageProps) {
         const { src } = this.props
+        if (this.controller) {
+            this.controller.removeEventListener('scroll', this.handleScroll)
+            this.controller.addEventListener('scroll', this.handleScroll)
+        }
         if (src !== nextProps.src) {
-            const loading = new PreLoad([src])
-            loading.success = this.handleSuccess.bind(this, nextProps.src, loading)
-            loading.completeLoad = this.completeURI.bind(this, nextProps.src)
+            if (this.loading) {
+                this.loading.clearAsync()
+            }
+            this.loading = new PreLoad([nextProps.src])
+            this.loading.success = this.handleSuccess.bind(this, nextProps.src, this.loading)
+            this.loading.completeLoad = this.completeURI.bind(this, nextProps.src)
         } else {
             this.handleSuccess.bind(this, src)
             this.completeURI.bind(this, src)
@@ -62,27 +84,30 @@ export default class Image extends React.Component<IProps, IState> {
     }
 
     public componentDidMount() {
-        const { controller } = this.props
-        this.controller = controller ? controller : window
-        this.handleScroll()
-        this.controller.addEventListener('scroll', this.handleScroll)
+        this.controller = this.controller ? this.controller : window
+        if (this.controller) {
+            this.handleScroll()
+            this.controller.addEventListener('scroll', this.handleScroll)
+        }
     }
 
     public componentWillUnmount() {
-        this.controller.removeEventListener('scroll', this.handleScroll)
+        if (this.controller) {
+            this.controller.removeEventListener('scroll', this.handleScroll)
+        }
     }
 
-    private completeURI(uri?: string) {
+    private completeURI(uri?: string | ArrayBuffer | null) {
         this.setState({
             uri,
             show: true
         })
     }
 
-    private handleSuccess(url?: string, loading?: PreLoad) {
+    private handleSuccess(url?: string | ArrayBuffer | null, loading?: PreLoad) {
         const { uri } = this.state
-        if (uri) {
-            this.controller.removeEventListener('scroll', this.handleScroll)
+        if (uri && uri === url) {
+            this.controller && this.controller.removeEventListener('scroll', this.handleScroll)
             return
         }
         this.setState({
@@ -92,15 +117,15 @@ export default class Image extends React.Component<IProps, IState> {
         if (loading) {
             loading.clearAsync()
         }
-        this.controller.removeEventListener('scroll', this.handleScroll)
+        this.controller && this.controller.removeEventListener('scroll', this.handleScroll)
     }
 
     private handleScroll = () => {
-        const { offsetBottom, src, controller } = this.props
+        const { offsetBottom, src } = this.props
         const { animation } = this.state
         let top: number = 0
-        if (controller) {
-            top = this.controller.scrollTop + browser.GL_SC_HEIGHT
+        if (this.controller) {
+            top = (this.controller.scrollTop || 0) + browser.GL_SC_HEIGHT
         } else {
             top = (document.documentElement && document.documentElement.scrollTop || document.body.scrollTop) + browser.GL_SC_HEIGHT
         }

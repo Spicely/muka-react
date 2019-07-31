@@ -1,14 +1,16 @@
-import * as React from 'react'
+import React, { Component } from 'react'
 import Item from './Item'
 import Input from './Input'
 import { getClassName } from '../utils'
 
-interface IProps {
+export interface IGirdProps {
     className?: string
     style?: React.CSSProperties
 }
 
-export default class Gird extends React.Component<IProps, any> {
+const prefixClass = 'gird'
+
+export default class Gird extends Component<IGirdProps, any> {
 
     public static Item = Item
 
@@ -18,7 +20,7 @@ export default class Gird extends React.Component<IProps, any> {
         const { className, style } = this.props
         const { children } = this.props
         return (
-            <div className={`${getClassName('gird', className)}`} style={style}>
+            <div className={`${getClassName(`${prefixClass}`, className)}`} style={style}>
                 {children}
             </div>
         )

@@ -1,18 +1,21 @@
-import * as React from 'react'
+import React, { Component } from 'react'
 import { getClassName } from '../utils'
+import Image from '../Image'
 
-interface IProps {
+export interface ICardProps {
     className?: string
     source?: string
 }
 
-export default class Card extends React.Component<IProps, any> {
+const prefixClass = 'card'
+
+export default class Card extends Component<ICardProps, any> {
     public render(): JSX.Element {
         const { className, source, children } = this.props
         return (
-            <div className={getClassName('card', className)}>
-                {source && <img src={source} />}
-                <div className={getClassName('card_info')}>
+            <div className={getClassName(`${prefixClass}`, className)}>
+                {source && <Image className={getClassName(`${prefixClass}_img`)} src={source} />}
+                <div className={getClassName(`${prefixClass}_info`)}>
                     {children}
                 </div>
             </ div>

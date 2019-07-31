@@ -1,0 +1,38 @@
+.@{prefix}date_picker {
+    height: 45 * @unit;
+    position: relative;
+    width: 100%;
+
+    &.active {
+        height: @height;
+
+        input {
+            @diff: 18 * @unit;
+            top: @diff;
+            height: calc(100% - @diff);
+        }
+    }
+
+    >div {
+        height: 100%;
+        width: 100%;
+    }
+
+    input {
+        border: none;
+        outline: none;
+        height: 100%;
+        width: 100%;
+        position: relative;
+        border-bottom: 1 * @unit solid #e8e8e8;
+        .transition;
+
+        &:focus {
+            border-color: @theme_color;
+        }
+        &:hover{
+            border-color: @theme_color !important;
+        }
+    }
+    
+}

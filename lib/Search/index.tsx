@@ -1,17 +1,19 @@
-import * as React from 'react'
+import React, { InputHTMLAttributes, CSSProperties, Component, MouseEvent } from 'react'
 import { omit } from 'muka'
 import Icon from '../Icon'
 import { getClassName } from '../utils'
 
-interface IProps extends React.InputHTMLAttributes<any> {
+export interface ISearchProps extends InputHTMLAttributes<any> {
     className?: string
-    style?: React.CSSProperties
+    style?: CSSProperties
     placeholder?: string
-    onPress?: (e?: React.MouseEvent<HTMLDivElement>) => void
+    onPress?: (e?: MouseEvent<HTMLDivElement>) => void
     iconPos?: 'left' | 'right'
 }
 
-export default class Search extends React.Component<IProps, any> {
+const prefixClass = 'search'
+
+export default class Search extends Component<ISearchProps, any> {
 
     public static defaultProps = {
         iconPos: 'right'
@@ -22,15 +24,13 @@ export default class Search extends React.Component<IProps, any> {
         const otherProps = omit(this.props, ['className', 'style', 'onPress', 'iconPos'])
         return (
             <div
-                className={getClassName('search flex', className)}
+                className={getClassName(`${prefixClass} flex`, className)}
                 style={style}
                 onClick={onPress}
             >
                 <input className={`flex_1 ${iconPos}`} {...otherProps} />
-                <Icon />
-                {/* <img src={require('../../assets/search.png')} /> */}
+                <Icon icon="ios-search" />
             </div>
         )
     }
-
 }

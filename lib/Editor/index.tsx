@@ -2,11 +2,11 @@ import * as React from 'react'
 import { getClassName } from '../utils'
 import Icon from '../Icon'
 
-interface IProps {
+export interface IEditorProps {
     className?: string
 }
 
-export default class Editor extends React.Component<IProps, any> {
+export default class Editor extends React.Component<IEditorProps, any> {
 
     public state = {
         value: '<p></p>'
@@ -26,7 +26,7 @@ export default class Editor extends React.Component<IProps, any> {
                     <div
                         className={getClassName('editor_body_container')}
                         dangerouslySetInnerHTML={{ __html: value }}
-                        contentEditable={true}
+                        contentEditable
                         onInput={this.handleChange}
                         onCompositionStart={() => { this.status = true }}
                         onCompositionEnd={() => { this.status = false }}
@@ -45,26 +45,28 @@ export default class Editor extends React.Component<IProps, any> {
         let value = e.target.innerHTML.replace(/<[div>]*>/gm, '<p>')
         value = value.replace(/<\/[div>]*>/gm, '</p>')
         const selection = window.getSelection()
-        const range = selection.getRangeAt(0)
-        const textNode = range.startContainer
-        const rangeStartOffset = range.startOffset
-        let nodeNum = 1
-        node.childNodes.forEach((item: Node, index: number) => {
-            if (item === textNode.parentNode || node === textNode.parentNode) {
-                nodeNum = index + 1
+        if (selection) {
+            const range = selection.getRangeAt(0)
+            const textNode = range.startContainer
+            const rangeStartOffset = range.startOffset
+            let nodeNum = 1
+            node.childNodes.forEach((item: Node, index: number) => {
+                if (item === textNode.parentNode || node === textNode.parentNode) {
+                    nodeNum = index + 1
+                }
+            })
+            if (!value || value === '<p></p>') {
+                value = `<p mark="mark$${(Math.random() * 100).toFixed(0)}"></p>`
             }
-        })
-        if (!value  || value === '<p></p>') {
-            value = `<p mark="mark$${(Math.random() * 100).toFixed(0)}"></p>`
+            this.setState(
+                { value },
+                () => {
+                    const dom = (node.childNodes[nodeNum - 1] && node.childNodes[nodeNum - 1].childNodes[0]) || node.childNodes[nodeNum - 1] || node
+                    range.setStart(dom, rangeStartOffset)
+                    selection.addRange(range)
+                }
+            )
         }
-        this.setState(
-            { value },
-            () => {
-                const dom = (node.childNodes[nodeNum - 1] && node.childNodes[nodeNum - 1].childNodes[0]) || node.childNodes[nodeNum - 1] || node
-                range.setStart(dom, rangeStartOffset)
-                selection.addRange(range)
-            }
-        )
     }
 
     // private getCursortPosition(textDom: HTMLDivElement) {

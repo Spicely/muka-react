@@ -1,33 +1,37 @@
-import * as React from 'react'
+import React, { ButtonHTMLAttributes, Component } from 'react'
 import { omit } from 'muka'
 import Icon from '../Icon'
 import { getClassName } from '../utils'
 
-interface IProps extends React.ButtonHTMLAttributes<any> {
+export type buttonMold = 'circle' | 'error' | 'primary'
+
+const prefixClass = 'btn'
+
+export interface IButtonProps extends ButtonHTMLAttributes<any> {
     tick?: boolean
-    type?: 'circle' | 'error' | 'primary'
+    mold?: buttonMold
     className?: string
     fixed?: boolean
     disabled?: boolean
     loading?: boolean
 }
 
-export default class Button extends React.Component<IProps, any> {
+export default class Button extends Component<IButtonProps, any> {
 
     public static defaultProps = {
-        type: 'default',
+        mold: 'default',
         tick: true
     }
 
     public render(): JSX.Element {
-        const { children, className, fixed, type, disabled, loading } = this.props
-        const otherProps = omit(this.props, ['children', 'className', 'fixed', 'type', 'tick'])
+        const { children, className, fixed, mold, disabled, loading } = this.props
+        const otherProps = omit(this.props, ['children', 'className', 'fixed', 'mold', 'tick', 'loading'])
         return (
             <button
-                className={getClassName(`btn btn_${type}${fixed ? ' fixed' : ''}${disabled ? ' disabled' : ''}`, className)}
+                className={getClassName(`${prefixClass} ${prefixClass}_${mold}${fixed ? ' fixed' : ''}${disabled ? ' disabled' : ''}`, className)}
                 {...otherProps}
             >
-                {loading ? <Icon icon="md-refresh" className={getClassName(`btn_loading`)} color="#fff" rotate={true} /> : ''}{children}
+                {loading ? <Icon icon="md-refresh" className={getClassName(`${prefixClass}_loading`)} rotate /> : ''}{children}
             </button>
         )
     }

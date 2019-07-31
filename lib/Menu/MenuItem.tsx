@@ -1,33 +1,63 @@
-import * as React from 'react'
+import React, { Component, Fragment } from 'react'
+import { isString } from 'muka'
+import { Tooltip } from 'antd'
+import Link from 'next/link'
 import { Consumer, IProvider } from './index'
 import { getClassName } from '../utils'
+import Icon, { iconType } from '../Icon'
 
-interface IProps {
+export interface IMenuItem {
     className?: string
-    icon?: string | JSX.Element | JSX.ElementClass
+    icon?: iconType | JSX.Element
     field?: string | number
+    iconHighlight?: string
+    iconInitColor?: string
 }
 
-export default class MenuItem extends React.Component<IProps, any> {
-
+export class MenuItem extends Component<IMenuItem, any> {
+    public static defaultProps = {
+        iconHighlight: '#FFFFFF',
+        iconInitColor: '#A8AdAF'
+    }
     public render(): JSX.Element {
-        const { children, className, icon, field } = this.props
+        const { children, className, icon, field, iconHighlight, iconInitColor } = this.props
         return (
             <Consumer>
                 {
                     (val: IProvider) => {
-                        return (
+                        const url = field ? field.toString() : ''
+                        const nodeView = (child: JSX.Element) => {
+                            if (val.collapsed) {
+                                return (
+                                    <Tooltip title={children} placement="right">
+                                        {child}
+                                    </Tooltip>
+                                )
+                            } else {
+                                return (
+                                    <Fragment>
+                                        {child}
+                                    </Fragment>
+                                )
+                            }
+                        }
+                        const jsxNode = (
                             <li className={getClassName(`menu_item${val.field === field ? ' active' : ''}`, className)} onClick={() => { val.onPress(field === undefined ? '' : field) }}>
-                                <div className={getClassName('menu_item__label flex')}>
-                                    <div className={getClassName('menu_item__label_icon')}>
-                                        {icon}
+                                <Link href={val.fieldToUrl ? url : '#'}>
+                                    <div className={getClassName(`menu_item__label flex${!icon ? ' single' : ''}`)}>
+                                        {
+                                            icon && (
+                                                <div className={getClassName('menu_item__label_icon flex_justify')}>
+                                                    {isString(icon) ? <Icon icon={icon} color={val.field === field ? iconHighlight : iconInitColor} /> : icon}
+                                                </div>
+                                            )
+                                        }
+                                        {!val.collapsed && <div className={getClassName('menu_item__label_title flex_1')}>{children}</div>}
                                     </div>
-                                    <div className="flex_1">
-                                        {children}
-                                    </div>
-                                </div>
+                                </Link>
                             </li>
                         )
+                        return nodeView(jsxNode)
                     }
                 }
             </Consumer>

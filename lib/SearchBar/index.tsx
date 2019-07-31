@@ -1,64 +1,52 @@
-import * as React from 'react'
-import Button from '../Button'
-import Icon from '../Icon'
-import NavBar from '../NavBar'
-import Search from '../Search'
-import { getClassName } from '../utils'
+import React, { Component, CSSProperties } from 'react'
 import { omit } from 'muka'
+import Input, { IInputProps } from '../Input'
+import NavBar, { INavBarRightIcon, INavBarRightImage } from '../NavBar'
+import { getClassName } from '../utils'
 
-interface IProps extends React.InputHTMLAttributes<any> {
+export interface ISearchBarProps extends IInputProps {
     className?: string
-    left?: string | JSX.Element | JSX.ElementClass
-    right?: string | JSX.Element | JSX.ElementClass
-    options?: string[]
+    style?: CSSProperties
+    left?: string | JSX.Element | null
+    right?: string | JSX.Element | null | (INavBarRightIcon | INavBarRightImage)[]
     divider?: boolean
     onPress?: (e?: React.MouseEvent<HTMLDivElement>) => void
     fixed?: boolean
+    onRightClick?: () => void
 }
 
-export default class SearchBar extends React.Component<IProps, any> {
+const prefixClass = 'search_bar'
+
+export default class SearchBar extends Component<ISearchBarProps, any> {
 
     public static defaultProps = {
         divider: true,
-        right: '搜索',
-        options: []
+        right: '搜索'
     }
 
     public render(): JSX.Element {
-        const { className, divider, left, right, fixed } = this.props
+        const { className, divider, left, right, fixed, onRightClick, style } = this.props
+
+
         return (
             <NavBar
-                className={getClassName('search_bar', className)}
+                className={getClassName(`${prefixClass}`, className)}
                 left={left}
+                style={style}
                 divider={divider}
                 title={this.getSearchNode()}
                 right={right}
                 fixed={fixed}
+                onRightClick={onRightClick}
             />
         )
     }
 
     private getSearchNode(): JSX.Element {
-        const { options } = this.props
-        const otherProps = omit(this.props, ['className', 'left', 'right', 'options', 'divider', 'fixed'])
-        let data: string[] = options || []
+        const otherProps = omit(this.props, ['className', 'left', 'right', 'options', 'divider', 'fixed', 'onRightClick'])
         return (
-            <div className={getClassName('search_bar_search')}>
-                <Search className={getClassName('search_bar__title')} {...otherProps} />
-                {
-                    data.map((item: string, index: number) => {
-                        return (
-                            <Button
-                                className={getClassName('btn_close')}
-                                tick={false}
-                                key={index}
-                            >
-                                {item}
-                                <Icon />
-                            </Button>
-                        )
-                    })
-                }
+            <div className={getClassName(`${prefixClass}_search`)}>
+                <Input className={getClassName(`${prefixClass}_search__int`)} {...otherProps} />
             </div>
         )
     }

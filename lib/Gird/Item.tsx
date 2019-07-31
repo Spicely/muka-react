@@ -1,17 +1,17 @@
-import * as React from 'react'
-import { withRouter } from 'react-router-dom'
-import Item, { IProps } from '../Item'
-import { getClassName } from '../utils'
+import React, { Component } from 'react'
 import { omit } from 'muka'
+import Item, { IItemProps } from '../Item'
+import { getClassName } from '../utils'
 
-class GirdItem extends React.Component<IProps, any> {
+const prefixClass = 'gird_input'
+
+export default class GirdItem extends Component<IItemProps, any> {
 
     public render(): JSX.Element {
         const { className } = this.props
         const otherProps: any = omit(this.props, ['className'])
         return (
-            <Item className={getClassName('gird_item', className)} {...otherProps} />
+            <Item className={getClassName(`${prefixClass}`, className)} {...otherProps} />
         )
     }
 }
-export default withRouter(GirdItem)

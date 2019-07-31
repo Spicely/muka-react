@@ -1,14 +1,13 @@
 import * as React from 'react'
-import { withRouter, RouteComponentProps } from 'react-router-dom'
-import { isBool, isString, isFunc } from 'muka'
+import { isBool, isFunction } from 'muka'
 import Icon from '../Icon'
 import { getClassName } from '../utils'
 
-export interface IProps extends RouteComponentProps<any> {
+export interface IItemProps {
     activeClass?: string
     className?: string
     title?: string | JSX.Element | JSX.ElementClass
-    link?: string | boolean
+    link?: boolean
     value?: string | JSX.Element | JSX.ElementClass
     extend?: string | JSX.Element | JSX.ElementClass
     icon?: string | JSX.Element | JSX.ElementClass
@@ -20,7 +19,7 @@ interface IState {
     active: boolean
 }
 
-class Item extends React.Component<IProps, IState> {
+export default class Item extends React.Component<IItemProps, IState> {
 
     public static defaultProps = {
         activeClass: 'active',
@@ -79,7 +78,7 @@ class Item extends React.Component<IProps, IState> {
         if (link) {
             return (
                 <div className={getClassName('item_link flex_justify')}>
-                    {icon || <Icon className={getClassName('item_link__icon')} icon="ios-arrow-forward"  color="rgba(0, 0, 0, 0.5)"/>}
+                    {icon || <Icon className={getClassName('item_link__icon')} icon="ios-arrow-forward"  color="#B6B6B6"/>}
                 </div>
             )
         }
@@ -92,9 +91,6 @@ class Item extends React.Component<IProps, IState> {
         this.setState({
             active: false
         })
-        if (this.link) {
-            this.moveToView()
-        }
     }
 
     private handleAddActive = () => {
@@ -122,17 +118,8 @@ class Item extends React.Component<IProps, IState> {
 
     private handlePress = () => {
         const { onPress } = this.props
-        if (isFunc(onPress)) {
+        if (isFunction(onPress)) {
             onPress()
         }
     }
-
-    private moveToView() {
-        const { link, history } = this.props
-        if (isString(link) && this.moveNum === 0) {
-            history.push(link)
-        }
-    }
 }
-
-export default withRouter(Item)

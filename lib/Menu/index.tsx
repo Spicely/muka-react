@@ -1,15 +1,23 @@
-import * as React from 'react'
-import MenuGroup from './MenuGroup'
-import MenuItem from './MenuItem'
+import React, { CSSProperties, createContext } from 'react'
+import { MenuGroup } from './MenuGroup'
+import { MenuItem } from './MenuItem'
 import { getClassName } from '../utils'
-import { isFunc } from 'muka'
+import { iconType } from '../Icon'
+import { isFunction } from 'muka'
+export * from './MenuGroup'
+export * from './MenuItem'
 
-interface IProps {
+export interface IMenuProps {
     className?: string
     width?: number | string
-    style?: React.CSSProperties
+    style?: CSSProperties
+    collapsed?: boolean
+    arrowIcon?: iconType
+    arrowIconPos?: 'right' | 'left'
     defaultSelected?: number | string
     onChange?: (index: number | string) => void
+    fieldToUrl?: boolean
+    arrowIconColor?: string
 }
 
 interface IState {
@@ -18,15 +26,22 @@ interface IState {
 
 export interface IProvider extends IState {
     onPress: (index: number | string) => void
+    collapsed: boolean
+    fieldToUrl: boolean
+    arrowIcon?: iconType
+    arrowIconColor?: string
+    arrowIconPos?: 'right' | 'left'
 }
 
 const defaultValue: IProvider = {
     field: '',
-    onPress: (index: number | string) => { return }
+    onPress: (index: number | string) => { return },
+    collapsed: false,
+    fieldToUrl: false,
 }
-export const { Consumer, Provider } = React.createContext(defaultValue)
+export const { Consumer, Provider } = createContext(defaultValue)
 
-export default class Menu extends React.Component<IProps, IState> {
+export default class Menu extends React.Component<IMenuProps, IState> {
 
     public static Group = MenuGroup
 
@@ -37,12 +52,12 @@ export default class Menu extends React.Component<IProps, IState> {
     }
 
     public render(): JSX.Element {
-        const { className, children, style, width } = this.props
-        let styles: React.CSSProperties = { ...style, width }
+        const { className, children, style, width, collapsed, fieldToUrl, arrowIcon, arrowIconColor, arrowIconPos } = this.props
+        const styles: React.CSSProperties = { ...style, width }
         return (
-            <ul className={getClassName('menu', className)} style={styles}>
+            <ul className={getClassName(`menu${collapsed ? ' fold' : ''}`, className)} style={styles}>
                 <Provider
-                    value={{ ...this.state, onPress: this.handlePress }}
+                    value={{ ...this.state, onPress: this.handlePress, collapsed: collapsed || false, fieldToUrl: fieldToUrl || false, arrowIcon: arrowIcon || 'md-arrow-down', arrowIconColor: arrowIconColor || '#333', arrowIconPos: arrowIconPos || 'right' }}
                 >
                     {
                         React.Children.map(children, (item: any, index: number) => {
@@ -60,6 +75,6 @@ export default class Menu extends React.Component<IProps, IState> {
 
     private handlePress = (field: number | string) => {
         const { onChange } = this.props
-        this.setState({ field }, () => { if (isFunc(onChange)) { onChange(field) } })
+        this.setState({ field }, () => { if (isFunction(onChange)) { onChange(field) } })
     }
 }

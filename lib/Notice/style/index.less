@@ -1,0 +1,45 @@
+@import '../../style/theme.less';
+
+.@{prefix}notice {
+    background: #fff;
+    padding: 10 * @unit 10 * @unit;
+    width: 100%;
+    height: @notice_height;
+    overflow: hidden;
+
+    &_logo {
+        width: 45 * @unit;
+        height: 35 * @unit;
+        padding-right: 10 * @unit;
+        margin-right: 10 * @unit;
+
+        &__img {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    &_view {
+        overflow: hidden;
+
+        &_title {
+            color: darken(@notice_color, 20%);
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        &_label {
+            color: @notice_color;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+
+            &.@{prefix}text__hide {
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                display: block;
+            }
+        }
+    }
+}

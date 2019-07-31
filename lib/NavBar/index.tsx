@@ -1,45 +1,94 @@
-import * as React from 'react'
-import { withRouter, RouteComponentProps } from 'react-router'
-import { isNumber } from 'muka'
-import { getClassName } from '../utils'
-import Icon from '../Icon'
+import React, { Component, CSSProperties } from 'react'
+import Router from 'next/router'
+import { isArray, isNumber, isNull, isFunction } from 'muka'
+import { getClassName, prefix } from '../utils'
+import Icon, { iconType } from '../Icon'
+import Image from '../Image'
 
-interface IProps extends RouteComponentProps<any> {
+export interface INavBarRightIcon {
+    type: 'icon'
+    url: iconType
+    link?: string
+    color?: string
+    onClick?: () => boolean
+}
+
+export interface INavBarRightImage {
+    type: 'image'
+    url: string
+    link?: string
+    onClick?: () => boolean
+}
+
+export interface INavBarProps {
     className?: string
-    left?: string | JSX.Element | JSX.ElementClass
-    title?: string | JSX.Element | JSX.ElementClass
-    right?: string | JSX.Element | JSX.ElementClass
+    leftClassName?: string
+    titleClassName?: string
+    rightClassName?: string
+    titleCenter?: boolean
+    style?: CSSProperties
+    left?: string | JSX.Element | null
+    title?: string | JSX.Element
+    right?: string | JSX.Element | null | (INavBarRightIcon | INavBarRightImage)[]
     fixed?: boolean
     endVal?: number
     divider?: boolean
+    animate?: boolean
+    goBack?: () => void
+    onRightClick?: () => void
 }
 
-class NavBar extends React.Component<IProps, any> {
+export default class NavBar extends Component<INavBarProps, any> {
 
-    public static defaultProps = {
+    public static defaultProps: INavBarProps = {
         divider: true
     }
 
-    public render() {
-        const { className, left, divider, title, right, fixed } = this.props
+    public render(): JSX.Element {
+        const { className, left, divider, title, right, fixed, goBack, leftClassName, titleCenter, titleClassName, rightClassName, style, onRightClick } = this.props
+        let rightValue: any
+        if (isArray(right)) {
+            rightValue = right.map((item: INavBarRightIcon | INavBarRightImage, index: number) => {
+                if (item.type === 'icon') {
+                    return (
+                        <Icon icon={item.url} color={item.color} onClick={this.handleClick.bind(this, item.link, item.onClick)} key={index} />
+                    )
+                } else if (item.type === "image") {
+                    return (
+                        <Image className={getClassName('nav_bar_right__img')} src={item.url} onClick={this.handleClick.bind(this, item.link, item.onClick)} key={index} />
+                    )
+                }
+            })
+        } else {
+            rightValue = right
+        }
         return (
             <div
-                className={`${getClassName(`nav_bar${divider ? ' divider' : ''} flex_justify${fixed ? ' fixed' : ''}`, className)}`}
+                className={`${getClassName(`nav_bar ${divider ? prefix + 'divider' : ''} flex_justify${fixed ? ' fixed' : ''}`, className)}`}
+                style={style}
             >
                 <div className="flex">
-                    <div className={getClassName('nav_bar_left', 'flex_justify')}>
-                        {left ? left : <Icon icon="ios-arrow-back-outline" onClick={this.handleBack} />}
-                    </div>
-                    <div className={getClassName('nav_bar_title flex_1', 'flex_justify')}> {title}</div>
-                    <div className={getClassName('nav_bar_right', 'flex_justify')}> {right} </div>
+                    {
+                        !isNull(left) && (
+                            <div className={getClassName('nav_bar_left flex_justify', leftClassName)} onClick={goBack}>
+                                {left ? left : <Icon icon="ios-arrow-back" />}
+                            </div>
+                        )
+                    }
+                    <div className={getClassName(`nav_bar_title flex_1 ${titleCenter ? 'flex_center' : 'flex_justify'}`, titleClassName)}> {title}</div>
+                    {
+                        !isNull(rightValue) && (
+                            <div className={getClassName('nav_bar_right flex_justify', rightClassName)} onClick={onRightClick}> {rightValue} </div>
+                        )
+                    }
                 </div>
             </div>
         )
     }
 
     public componentDidMount() {
-        const { fixed } = this.props
-        if (fixed) {
+        const { fixed, animate } = this.props
+        if (fixed && animate) {
             window.addEventListener('scroll', this.handleScroll)
         }
     }
@@ -50,12 +99,15 @@ class NavBar extends React.Component<IProps, any> {
         if (isNumber(endVal)) {
             console.log(top)
         }
-
     }
 
-    private handleBack = () => {
-        const { history } = this.props
-        history.goBack()
+    private handleClick = (link?: string, onClick?: () => boolean) => {
+        let status = true
+        if (isFunction(onClick)) {
+            status = onClick()
+        }
+        if (status && link) {
+            Router.push(link)
+        }
     }
 }
-export default withRouter(NavBar)
