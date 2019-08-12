@@ -17,7 +17,7 @@ export interface IUploadProps {
     multiple: boolean
     fileTypes?: string[]
     baserUrl?: string
-    maxLength?: boolean
+    maxLength?: number
     style?: CSSProperties
     name?: string
     withCredentials?: boolean

@@ -1,8 +1,13 @@
-import React, { Component, Children, CSSProperties } from 'react'
-import { isNumber, isFunction, isString } from 'muka'
+import React, { Component, CSSProperties } from 'react'
+import { isNumber, isFunction } from 'muka'
 import hexRgb from 'hex-rgb'
 import Image from '../Image'
 import { getClassName, prefix } from '../utils'
+
+export interface ICarouselValueProps {
+    url: string
+    link?: string
+}
 
 export interface ICarouselProps {
     className?: string
@@ -10,7 +15,7 @@ export interface ICarouselProps {
     dotType?: 'rectangle' | 'circular'
     dotColor?: string
     dotClassName?: string
-    value?: string[]
+    value: ICarouselValueProps[]
     dots?: boolean
     autoplay?: boolean
     defaultSelected?: number
@@ -18,6 +23,7 @@ export interface ICarouselProps {
     time?: number
     onChnage?: (selected: number) => void
     effect?: 'scrollx' | 'scrolly' | 'fade'
+    baseUrl?: string
     selected?: number
 }
 
@@ -44,8 +50,10 @@ export default class Carousel extends Component<ICarouselProps, IState> {
         dotType: 'rectangle',
         dots: true,
         time: 2000,
+        value: [],
         autoplay: false,
-        effect: 'scrollx'
+        effect: 'scrollx',
+        baseUrl: ''
     }
 
     public state: IState = {
@@ -62,9 +70,8 @@ export default class Carousel extends Component<ICarouselProps, IState> {
     private animateNode: Element | null = null
 
     public render(): JSX.Element {
-        const { className, children, dotPosition, dotClassName, dots, effect, style, autoplay, value, dotType, dotColor } = this.props
+        const { className, dotPosition, dotClassName, dots, effect, style, autoplay, value, dotType, dotColor, baseUrl } = this.props
         const { selectIndex, left, top, animate } = this.state
-        const length = Children.count(value || children)
         const cssStyle: CSSProperties = {}
         const dotStyle: CSSProperties = {}
         if (dotColor) {
@@ -85,7 +92,7 @@ export default class Carousel extends Component<ICarouselProps, IState> {
                 ref={(e) => this.carouselNode = e}
             >
                 {
-                    Children.map(value || children, (child, index) => {
+                    value.map((child, index) => {
                         return (
                             <div
                                 className={getClassName(`${prefixClass}__item flex_center ${effect === 'fade' ? prefix + 'fade' : ''}`)}
@@ -98,13 +105,13 @@ export default class Carousel extends Component<ICarouselProps, IState> {
                                 key={index}
                             >
                                 {
-                                    isString(child) ? <Image className={getClassName(`${prefixClass}__item_image`)} src={child} /> : child
+                                    <Image className={getClassName(`${prefixClass}__item_image`)} src={baseUrl + child.url} />
                                 }
                             </div>
                         )
                     })
                 }
-                {autoplay && effect !== 'fade' && Children.map(value || children, (child, index) => {
+                {autoplay && effect !== 'fade' && value.map((child, index) => {
                     if (index === 0) {
                         return (
                             <div
@@ -114,7 +121,7 @@ export default class Carousel extends Component<ICarouselProps, IState> {
                                 ref={(e) => this.animateNode = e}
                             >
                                 {
-                                    isString(child) ? <Image className={getClassName(`${prefixClass}__item_image`)} src={child} /> : child
+                                    <Image className={getClassName(`${prefixClass}__item_image`)} src={baseUrl + child.url} />
                                 }
                             </div>
                         )
@@ -128,12 +135,12 @@ export default class Carousel extends Component<ICarouselProps, IState> {
                             <div className="flex_center">
                                 <span className={(dotPosition === 'bottom' || dotPosition === 'top' || dotPosition === 'bottomRight' || dotPosition === 'bottomLeft') ? 'flex' : ''}>
                                     {
-                                        Children.map(value || children, (child, index) => {
+                                        value.map((child, index) => {
                                             return (
                                                 <div
-                                                    className={getClassName(`${prefixClass}_dot__item ${prefix}${dotType} ${selectIndex % length === index ? prefix + 'active' : ''}`, dotClassName)} key={index}
+                                                    className={getClassName(`${prefixClass}_dot__item ${prefix}${dotType} ${selectIndex % value.length === index ? prefix + 'active' : ''}`, dotClassName)} key={index}
                                                     onClick={this.handleTabIndex.bind(this, index)}
-                                                    style={selectIndex % length === index ? { background: dotColor } : dotStyle}
+                                                    style={selectIndex % value.length === index ? { background: dotColor } : dotStyle}
                                                 />
                                             )
                                         })
@@ -170,7 +177,7 @@ export default class Carousel extends Component<ICarouselProps, IState> {
     }
 
     public componentWillReceiveProps(nextProps: ICarouselProps) {
-        const { autoplay, selected } = this.props
+        const { autoplay, selected, time } = this.props
         if (autoplay !== nextProps.autoplay) {
             if (nextProps.autoplay && !this.timer) {
                 this.interval(true)
@@ -178,6 +185,10 @@ export default class Carousel extends Component<ICarouselProps, IState> {
                 clearInterval(this.timer)
                 this.timer = undefined
             }
+        }
+        if (nextProps.autoplay && time !== nextProps.time) {
+            clearInterval(this.timer)
+            this.interval(true)
         }
         if (isNumber(nextProps.selected) && selected !== nextProps.selected) {
             clearInterval(this.timer)
@@ -201,9 +212,9 @@ export default class Carousel extends Component<ICarouselProps, IState> {
         const { time, effect } = this.props
         if (autoPlay) {
             this.timer = setInterval(() => {
-                const { children, value } = this.props
+                const { value } = this.props
                 const { selectIndex } = this.state
-                const length = Children.count(value || children)
+                const length = value.length
                 const status = effect !== 'fade' ? selectIndex === length : selectIndex === length - 1
                 this.handleTabIndex(status ? 0 : selectIndex + 1)
             }, time)
@@ -211,10 +222,9 @@ export default class Carousel extends Component<ICarouselProps, IState> {
     }
 
     private handleAnimate = () => {
-        const { children, effect, value } = this.props
+        const { effect, value } = this.props
         const { selectIndex } = this.state
-        const length = Children.count(value || children)
-        if (selectIndex === length && effect !== 'fade') {
+        if (selectIndex === value.length && effect !== 'fade') {
             this.setState({
                 selectIndex: 0,
                 animate: false
@@ -229,13 +239,12 @@ export default class Carousel extends Component<ICarouselProps, IState> {
     }
 
     private handleTabIndex(index: number) {
-        const { children, onChnage, value } = this.props
-        const length = Children.count(value || children)
+        const { onChnage, value } = this.props
         this.setState({
             selectIndex: index
         })
         if (isFunction(onChnage)) {
-            onChnage(index % length)
+            onChnage(index % value.length)
         }
     }
 }

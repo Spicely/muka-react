@@ -75,8 +75,8 @@ export default class Image extends Component<IImageProps, IState> {
                 this.loading.clearAsync()
             }
             this.loading = new PreLoad([nextProps.src])
-            this.loading.success = this.handleSuccess.bind(this, nextProps.src, this.loading)
             this.loading.completeLoad = this.completeURI.bind(this, nextProps.src)
+            this.loading.success = this.handleSuccess.bind(this, nextProps.src, this.loading)
         } else {
             this.handleSuccess.bind(this, src)
             this.completeURI.bind(this, src)

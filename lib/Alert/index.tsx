@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { Component, CSSProperties } from 'react'
 import { getClassName, prefix } from '../utils'
 import { iconType } from '../Icon'
 
@@ -9,6 +9,7 @@ export interface IAlertProps {
     title?: string | JSX.Element
     inheritColor?: boolean
     message: string | JSX.Element
+    style?: CSSProperties
 }
 
 // tslint:disable-next-line: no-empty-interface
@@ -28,12 +29,12 @@ export default class Alert extends Component<IAlertProps, IState> {
     }
 
     public render(): JSX.Element {
-        const { type, message, title, inheritColor } = this.props
+        const { type, message, title, inheritColor, style } = this.props
         return (
-            <div className={getClassName(`${prefixClass} ${prefix}${prefixClass}_${type}${inheritColor ? ' inherit_color' : ''}`)}>
+            <div className={getClassName(`${prefixClass} ${prefix}${prefixClass}_${type}${inheritColor ? ' inherit_color' : ''}`)} style={style}>
                 {
                     title ? (
-                        <div className={getClassName(`${prefixClass}_title`)}>
+                        <div className={getClassName(`${prefixClass}_title`)} style={{ marginBottom: message ? '' : 0 }}>
                             {title}
                         </div>
                     ) : null

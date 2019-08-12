@@ -5,8 +5,6 @@
     display: inline-block;
     cursor: pointer;
 
-
-
     &_core {
         height: @radio_height;
         width: @radio_height;
@@ -42,10 +40,12 @@
 
     &_group {
         .@{prefix}radio {
-            margin-left: 10 * @unit;
+            margin-right: 10 * @unit;
+            margin-top: 5 * @unit;
+            margin-bottom: 5 * @unit;
 
-            &:first-child {
-                margin-left: 0;
+            &:last-child {
+                margin-right: 0;
             }
         }
     }

@@ -3,6 +3,7 @@ import { omit, isFunction, isEmpty } from 'muka'
 import InputSearch from './search'
 import { getClassName, prefix } from '../utils'
 import Icon from '../Icon'
+import { Button } from 'antd';
 export * from './search'
 
 export interface IInputProps extends InputHTMLAttributes<any> {
@@ -18,6 +19,8 @@ export interface IInputProps extends InputHTMLAttributes<any> {
     labelClassName?: string
     showMaxLength?: boolean
     extend?: string | JSX.Element
+    extendClassName?: string
+    extendStyle?: CSSProperties
 }
 
 interface IState {
@@ -42,9 +45,9 @@ export default class Input extends Component<IInputProps, IState> {
     }
 
     public render(): JSX.Element {
-        const { className, placeholder, placeAnimate, value, closeIconShow, disabled, label, labelClassName, labelStyle, showMaxLength, maxLength, extend } = this.props
+        const { className, placeholder, placeAnimate, value, closeIconShow, disabled, label, labelClassName, labelStyle, showMaxLength, maxLength, extend, extendClassName, extendStyle } = this.props
         const { moveToTop, val } = this.state
-        const otherProps = omit(this.props, ['className', 'placeholder', 'placeAnimate', 'onFocus', 'onBlur', 'onClose', 'value', 'closeIconShow', 'labelStyle', 'label', 'labelClassName', 'showMaxLength', 'extend'])
+        const otherProps = omit(this.props, ['className', 'placeholder', 'placeAnimate', 'onFocus', 'onBlur', 'onClose', 'value', 'closeIconShow', 'labelStyle', 'label', 'labelClassName', 'showMaxLength', 'extend', 'extendStyle', 'extendClassName'])
         return (
             <div className={getClassName(`input flex${placeAnimate ? ' active' : ''}`, className)}>
                 {label ? <div className={getClassName(`${prefixClass}__label flex_justify ${labelClassName}`)} style={labelStyle}>{label}</div> : null}
@@ -67,7 +70,7 @@ export default class Input extends Component<IInputProps, IState> {
                     }}>{val.length || (value || '').toString().length}/{maxLength}</div> : null}
                     {(value || val) && closeIconShow && !disabled && <Icon className={getClassName(`${prefixClass}_close_icon`)} onClick={this.handleClose} icon="ios-close" fontSize="16px" style={{ right: 5 }} />}
                 </div>
-                {extend && <div className={getClassName(`${prefixClass}_extend flex_justify`)} style={{ margin: 0 }}>{extend}</div>}
+                {extend && <div className={getClassName(`${prefixClass}_extend flex_justify`, extendClassName)} style={{ ...extendStyle, margin: 0 }}>{extend}</div>}
             </div>
         )
     }

@@ -1,4 +1,4 @@
-import React, { Component, ChangeEvent, MouseEvent } from 'react'
+import React, { Component, ChangeEvent, MouseEvent, CSSProperties } from 'react'
 import { SketchPicker, ChromePicker, BlockPicker, GithubPicker, TwitterPicker, HuePicker, AlphaPicker, CirclePicker, SliderPicker, CompactPicker, MaterialPicker, SwatchesPicker, ColorResult } from 'react-color'
 import { isFunction } from 'muka'
 import Mask from './mask'
@@ -11,6 +11,7 @@ export interface IColorsProps {
     className?: string
     type?: colorsType
     initColor?: string
+    style?: CSSProperties
     onChange?: (color: ColorResult, event: ChangeEvent) => void
     [name: string]: any
 }
@@ -47,10 +48,10 @@ export default class Colors extends Component<IColorsProps, IState> {
     private colorNode: Element | null = null
 
     public render(): JSX.Element {
-        const { className } = this.props
+        const { className, style } = this.props
         const { color, visible, left, top } = this.state
         return (
-            <div className={getClassName(`${prefixClass} flex_justify`, className)}>
+            <div className={getClassName(`${prefixClass} flex_justify`, className)} style={style}>
                 <div className="flex">
                     <div className={getClassName(`${prefixClass}_color`)} ref={(e) => this.colorNode = e} onClick={this.handleClick}>
                         <div className={getClassName(`${prefixClass}_color_box`)} style={{ background: color }}></div>

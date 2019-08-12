@@ -7,6 +7,9 @@
     height: @input_height;
     font-size: @input_font_size;
     position: relative;
+    .transition(0.5s);
+    overflow: hidden;
+    background: #fff;
 
     &__label {
         width: 60 * @unit;
@@ -46,6 +49,7 @@
             padding: 0 10 * @unit;
             outline: none;
             height: 100%;
+            background: inherit;
             width: 100%;
             position: relative;
             font-size: @input_font_size;

@@ -1,6 +1,6 @@
 import React, { Component, CSSProperties } from 'react'
 import Router from 'next/router'
-import { isArray, isNumber, isNull, isFunction } from 'muka'
+import { isArray, isNumber, isNull, isFunction, isString } from 'muka'
 import { getClassName, prefix } from '../utils'
 import Icon, { iconType } from '../Icon'
 import Image from '../Image'
@@ -38,6 +38,8 @@ export interface INavBarProps {
     onRightClick?: () => void
 }
 
+const prefixClass = 'nav_bar'
+
 export default class NavBar extends Component<INavBarProps, any> {
 
     public static defaultProps: INavBarProps = {
@@ -45,17 +47,22 @@ export default class NavBar extends Component<INavBarProps, any> {
     }
 
     public render(): JSX.Element {
-        const { className, left, divider, title, right, fixed, goBack, leftClassName, titleCenter, titleClassName, rightClassName, style, onRightClick } = this.props
+        const { className, left, divider, title, right, fixed, goBack, leftClassName, titleCenter, titleClassName, rightClassName, style, onRightClick, children } = this.props
         let rightValue: any
         if (isArray(right)) {
             rightValue = right.map((item: INavBarRightIcon | INavBarRightImage, index: number) => {
                 if (item.type === 'icon') {
                     return (
-                        <Icon icon={item.url} color={item.color} onClick={this.handleClick.bind(this, item.link, item.onClick)} key={index} />
+                        <div className={getClassName(`${prefixClass}_right__item`)} key={index}>
+                            <Icon icon={item.url} color={item.color} onClick={this.handleClick.bind(this, item.link, item.onClick)} />
+                        </div>
+
                     )
                 } else if (item.type === "image") {
                     return (
-                        <Image className={getClassName('nav_bar_right__img')} src={item.url} onClick={this.handleClick.bind(this, item.link, item.onClick)} key={index} />
+                        <div className={getClassName(`${prefixClass}_right__item`)} key={index}>
+                            <Image className={getClassName(`${prefixClass}_right__img`)} src={item.url} onClick={this.handleClick.bind(this, item.link, item.onClick)} />
+                        </div>
                     )
                 }
             })
@@ -64,21 +71,21 @@ export default class NavBar extends Component<INavBarProps, any> {
         }
         return (
             <div
-                className={`${getClassName(`nav_bar ${divider ? prefix + 'divider' : ''} flex_justify${fixed ? ' fixed' : ''}`, className)}`}
+                className={`${getClassName(`${prefixClass} ${divider ? prefix + 'divider' : ''} flex_justify ${fixed ? prefix + 'fixed' : ''}`, className)}`}
                 style={style}
             >
                 <div className="flex">
                     {
                         !isNull(left) && (
-                            <div className={getClassName('nav_bar_left flex_justify', leftClassName)} onClick={goBack}>
+                            <div className={getClassName(`${prefixClass}_left flex_justify`, leftClassName)} onClick={goBack}>
                                 {left ? left : <Icon icon="ios-arrow-back" />}
                             </div>
                         )
                     }
-                    <div className={getClassName(`nav_bar_title flex_1 ${titleCenter ? 'flex_center' : 'flex_justify'}`, titleClassName)}> {title}</div>
+                    <div className={getClassName(`${prefixClass}_title flex_1 ${titleCenter ? 'flex_center' : 'flex_justify'}`, titleClassName)}> {title || children}</div>
                     {
                         !isNull(rightValue) && (
-                            <div className={getClassName('nav_bar_right flex_justify', rightClassName)} onClick={onRightClick}> {rightValue} </div>
+                            <div className={getClassName(`${prefixClass}_right flex ${isString(rightValue) ? 'flex_justify' : ''}`, rightClassName)} onClick={onRightClick}> {rightValue} </div>
                         )
                     }
                 </div>

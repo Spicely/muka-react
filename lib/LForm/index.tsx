@@ -1,7 +1,7 @@
 import React, { Component, ChangeEvent } from 'react'
 import Loadable from 'react-loadable'
 import moment from 'moment'
-import { omit, isFunction, isNil, isUndefined, hash } from 'muka'
+import { omit, isFunction, isUndefined, hash, isBool } from 'muka'
 import { getClassName } from '../utils'
 import { IButtonProps } from '../Button'
 import { RadioGroupProps } from 'antd/lib/radio'
@@ -13,13 +13,14 @@ import { IMapProps } from '../Map'
 import { ITextareaProps } from '../Textarea'
 import { IColorsProps, ColorResult } from '../Colors'
 import { ICarouselProps } from '../Carousel'
+import { ISelectProps } from '../Select'
 
 interface ILFormUpload extends ILUpload {
     label?: string | JSX.Element
 }
 
 type component = 'Colors' | 'Input' | 'Button' | 'Radio' | 'DatePicker' | 'LUpload' | 'NULL' | 'Label' | 'RadioGroup' | 'Select' | 'ImagePicker' | 'Map' | 'Textarea' | 'Carousel' | 'Slider'
-type props = RadioGroupProps | IInputProps | IButtonProps | ILDatePicker | ILFormUpload | IImagePickerProps | IMapProps | ICarouselProps | ITextareaProps | IColorsProps | undefined
+type props = RadioGroupProps | IInputProps | IButtonProps | ILDatePicker | ILFormUpload | IImagePickerProps | IMapProps | ICarouselProps | ITextareaProps | IColorsProps | ISelectProps | undefined
 
 export interface ILFormItem {
     component: component
@@ -161,6 +162,7 @@ export default class LForm extends Component<ILFormProps, IState> {
                 additional: item.additional,
                 label: item.label,
                 props: item.props || {},
+                className: item.className,
                 render: isUndefined(item.render) ? true : item.render
             })
         })
@@ -190,6 +192,7 @@ export default class LForm extends Component<ILFormProps, IState> {
                     label: item.label,
                     props: _porps,
                     additional: item.additional,
+                    className: item.className,
                     render: isUndefined(item.render) ? true : item.render
                 }
                 switch (item.component) {
@@ -231,6 +234,7 @@ export default class LForm extends Component<ILFormProps, IState> {
                     ...newProps
                 }
                 newChild[index].additional = item.additional
+                newChild[index].render = isBool(item.render) ? item.render : true
             }
         })
         this.setState({
@@ -304,7 +308,7 @@ export default class LForm extends Component<ILFormProps, IState> {
             case 'LUpload': return loadableComponent(import('../LUpload'))
             case 'Label': return loadableComponent(import('../Label'))
             case 'RadioGroup': return loadableComponent(import('../Radio/Group'))
-            case 'Select': return loadableComponent(import('antd/lib/select'))
+            case 'Select': return loadableComponent(import('../Select'))
             case 'ImagePicker': return loadableComponent(import('../ImagePicker'))
             case 'Map': return loadableComponent(import('../Map'))
             case 'Textarea': return loadableComponent(import('../Textarea'))
@@ -424,17 +428,28 @@ export default class LForm extends Component<ILFormProps, IState> {
                 )
             }
             case 'Button': {
-                const vProps = omit(props, [])
-                return <View {...vProps} key={field} />
+                const vProps = omit(props, ['className'])
+                const _porps: any = props
+                return (
+                    <div className={getClassName(`${prefixClass}__list flex_justify`, className)} key={field}>
+                        <div className="flex">
+                            {label && <div className={getClassName(`${prefixClass}__list_label`)} style={{ paddingTop: '5px' }}>{label}</div>}
+                            <div className="flex_1">
+                                <View {...vProps} key={field} className={getClassName(`${prefixClass}_btn`, _porps.className)} />
+                            </div>
+                        </div>
+                        {additional && <div className={getClassName(`${prefixClass}__additional flex_justify`)}>{additional}</div>}
+                    </div>
+                )
             }
             case 'Radio': {
-                const vProps = omit(props, ['onChange', 'value'])
+                const vProps = omit(props, ['onChange'])
                 const _porps: any = props
                 const onChange: any = _porps.onChange
                 return (
                     <div className={getClassName(`${prefixClass}__list flex_justify`, className)} key={field}>
                         <div className="flex">
-                            {label && <div className={getClassName(`${prefixClass}__list_label`)}>{label}</div>}
+                            {label && <div className={getClassName(`${prefixClass}__list_label`)} style={{ paddingTop: '5px' }}>{label}</div>}
                             <div className="flex_1">
                                 <View
                                     {...vProps}
@@ -526,14 +541,19 @@ export default class LForm extends Component<ILFormProps, IState> {
                 const _porps: any = props
                 const onChange: any = _porps.onChange
                 return (
-                    <div className={getClassName('l_form_select flex', className)} key={field}>
-                        {_porps.label && <div className={getClassName('l_form_select_label flex_justify')}>{_porps.label}</div>}
-                        <View
-                            {...vProps}
-                            value={vals[field]}
-                            className="flex_1"
-                            onChange={this.setRVal.bind(this, field, onChange)}
-                        />
+                    <div className={getClassName(`${prefixClass}__list flex_justify`, className)} key={field}>
+                        <div className="flex">
+                            {label && <div className={getClassName(`${prefixClass}__list_label`)} style={{ paddingTop: '5px' }}>{label}</div>}
+                            <div className="flex_1">
+                                <View
+                                    {...vProps}
+                                    value={vals[field]}
+                                    className={`flex_1 ${_porps.className || ''}`}
+                                    onChange={this.setRVal.bind(this, field, onChange)}
+                                />
+                            </div>
+                        </div>
+                        {additional && <div className={getClassName(`${prefixClass}__additional flex_justify`)}>{additional}</div>}
                     </div>
                 )
             }
@@ -541,17 +561,20 @@ export default class LForm extends Component<ILFormProps, IState> {
                 const vProps = omit(props, ['value', 'onChange', 'className'])
                 const _porps: any = props
                 return (
-                    <div className={getClassName(`l_form_label flex`, _porps.className)} key={field}>
-                        {_porps.label && <div className="flex_justify" style={{ marginRight: '0.4rem' }}>{_porps.label}</div>}
-                        <div className="flex_1 flex_justify">
-                            <View
-                                {...vProps}
-                                style={{ paddingTop: '0', paddingBottom: '0' }}
-                                key={field}
-                            >
-                                {_porps.value}
-                            </View>
+                    <div className={getClassName(`${prefixClass}__list flex_justify`, className)} key={field}>
+                        <div className="flex">
+                            {label && <div className={getClassName(`${prefixClass}__list_label`)} style={{ paddingTop: '5px' }}>{label}</div>}
+                            <div className="flex_1">
+                                <View
+                                    {...vProps}
+                                    style={{ paddingTop: '0', paddingBottom: '0' }}
+                                    key={field}
+                                >
+                                    {_porps.value}
+                                </View>
+                            </div>
                         </div>
+                        {additional && <div className={getClassName(`${prefixClass}__additional flex_justify`)}>{additional}</div>}
                     </div>
                 )
             }

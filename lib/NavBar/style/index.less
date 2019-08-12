@@ -23,9 +23,19 @@
     &_right {
         padding-left: 10 * @unit;
         min-width: 1.4rem;
-        &__img{
+
+        &__img {
             width: 22 * @unit;
             height: 22 * @unit;
+        }
+
+        &__item {
+            display: inline-block;
+            margin-right: 5 * @unit;
+
+            &:last-child {
+                margin-right: 0;
+            }
         }
     }
 }

@@ -1,3 +1,3 @@
-import '../../style'
-import '../../Image/style'
+import '../../style/core'
+import '../../Icon/style'
 import './index.less'

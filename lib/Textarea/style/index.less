@@ -3,6 +3,8 @@
 
 .@{prefix}textarea {
     position: relative;
+    background: #fff;
+    border-radius: @theme_border_radius;
 
     textarea {
         padding: 5 * @unit;
@@ -12,7 +14,9 @@
         min-height: 80 * @unit;
         font-size: @textarea_font_size;
         resize: none;
+        background: inherit;
         border: 1 * @unit solid #e8e8e8;
+        border-radius: inherit;
         .transition(0.5s);
 
         &:disabled {
