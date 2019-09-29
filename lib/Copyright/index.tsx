@@ -10,13 +10,9 @@ export interface ICopyrightProps {
     onClick?: () => void
 }
 
-interface IState {
-
-}
-
 const prefixClass = 'copyright'
 
-export default class Copyright extends Component<ICopyrightProps, IState> {
+export default class Copyright extends Component<ICopyrightProps, any> {
 
     public static defaultProps: ICopyrightProps = {
         type: 'horizontal'
@@ -39,5 +35,4 @@ export default class Copyright extends Component<ICopyrightProps, IState> {
             </div>
         )
     }
-
 }

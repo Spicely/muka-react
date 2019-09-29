@@ -277,6 +277,7 @@ export default class Notice extends Component<INoticeProps, IState> {
                     selectIndex: sIndex > value.length + 1 ? 0 : sIndex,
                     valueAnimate: true
                 }, () => {
+                    // tslint:disable-next-line: no-shadowed-variable
                     const { valueIndex, selectIndex } = this.state
                     if (valueIndex === value.length) {
                         setTimeout(() => {
@@ -333,6 +334,7 @@ export default class Notice extends Component<INoticeProps, IState> {
                         selectIndex: value.length > 2 ? index : sIndex,
                         animate: sIndex === value.length + 2 ? false : true
                     }, () => {
+                        // tslint:disable-next-line: no-shadowed-variable
                         const { selectIndex } = this.state
                         if (selectIndex === value.length + 2) {
                             this.ev = true
@@ -365,6 +367,7 @@ export default class Notice extends Component<INoticeProps, IState> {
                             selectIndex: sIndex >= 3 ? 0 : sIndex,
                             animate: sIndex >= 3 ? false : true,
                         }, () => {
+                            // tslint:disable-next-line: no-shadowed-variable
                             const { valueIndex } = this.state
 
                             if (valueIndex === -1) {

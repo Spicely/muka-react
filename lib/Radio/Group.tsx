@@ -3,7 +3,6 @@ import { isUndefined, isFunction } from 'muka'
 import { getClassName, IValue } from '../utils'
 import Radio, { IRadioType } from './index'
 
-
 export interface IRadioGroupOptions {
     label: string
     value: string | number | boolean

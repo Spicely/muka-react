@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
+import { isFunction } from 'muka'
 import { getClassName, prefix } from '../utils'
-import Button from '../Button';
-import Icon from '../Icon';
-import { isFunction } from 'muka';
+import Button from '../Button'
+import Icon from '../Icon'
 
 export interface IPaginationProps {
     className?: string
@@ -205,6 +205,7 @@ export default class Pagination extends Component<IPaginationProps, IState> {
                                 </Button>
                             )
                         }
+                        return undefined
                     })
                 }
                 <Button
@@ -220,7 +221,9 @@ export default class Pagination extends Component<IPaginationProps, IState> {
 
     private handleChange = (index: number) => {
         const { onChange, current } = this.props
-        if (index === current) return
+        if (index === current) {
+            return undefined
+        }
         if (isFunction(onChange)) {
             onChange(index)
         }

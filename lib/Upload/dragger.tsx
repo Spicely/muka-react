@@ -91,7 +91,7 @@ export default class Upload extends Component<IUploadProps, IState> {
                                         children ? children : (
                                             <div className={getClassName(`${prefixClass}__box_default`)}>
                                                 <div className={getClassName(`${prefixClass}__box_default__icon`)}>
-                                                    {isString(iconProps) ? <Icon icon={iconProps} fontSize="40px" color={iconColorProps} /> : iconProps}
+                                                    {isString(iconProps) ? <Icon icon={iconProps || undefined} fontSize="40px" color={iconColorProps} /> : iconProps}
                                                 </div>
                                                 <div className={getClassName(`${prefixClass}__box_default__title`)}>
                                                     {titleProps}
@@ -110,7 +110,9 @@ export default class Upload extends Component<IUploadProps, IState> {
                                             if (isFunction(renderItem)) {
                                                 return renderItem(i)
                                             } else {
-                                                if (!i.info.fileName && !i.info.type) return
+                                                if (!i.info.fileName && !i.info.type) {
+                                                    return undefined
+                                                }
                                                 return (
                                                     <div className={getClassName(`${prefixClass}_upload__view__item flex`)} key={index}>
                                                         <div className={getClassName(`${prefixClass}_upload__view__item__icon flex_center`)}>
@@ -196,6 +198,7 @@ export default class Upload extends Component<IUploadProps, IState> {
             const file = files.item(i)
             if (file && (isNumber(maxLength) ? fileList.length < maxLength : true)) {
                 if (isArray(fileTypes)) {
+                    // tslint:disable-next-line: no-shadowed-variable
                     if (fileTypes.includes(file.type) || fileTypes.some((i) => file.name.includes(i))) {
                         if (maxFileSize && file.size >= maxFileSize) {
                             if (isFunction(onMaxFileSizeError)) {
@@ -251,7 +254,8 @@ export default class Upload extends Component<IUploadProps, IState> {
             let url = action
             if (isObject(data)) {
                 let params = ''
-                Object.keys(data).map((i) => {
+                // tslint:disable-next-line: no-shadowed-variable
+                Object.keys(data).map((i: any) => {
                     params = i + '=' + data[i] + '&'
                 })
                 url = url + '?' + params
@@ -261,11 +265,12 @@ export default class Upload extends Component<IUploadProps, IState> {
                     baseURL: baserUrl,
                     method: 'POST',
                     headers,
-                    url: url,
+                    url,
                     data: formData,
                     withCredentials,
                     onUploadProgress: (progressEvent) => {
-                        const complete = (progressEvent.loaded / progressEvent.total * 100 | 0)
+                        const complete = (progressEvent.loaded / progressEvent.total * 100) || 0
+                        // tslint:disable-next-line: no-shadowed-variable
                         const { fileList } = this.state
                         if (fileList[index]) {
                             fileList[index].info = {
@@ -279,6 +284,7 @@ export default class Upload extends Component<IUploadProps, IState> {
                         }
                     }
                 }).then((response) => {
+                    // tslint:disable-next-line: no-shadowed-variable
                     const { fileList } = this.state
                     if (response.status === 200) {
                         if (isFunction(onUploadSuccess)) {

@@ -37,8 +37,8 @@ export default class Progress extends Component<IProgressProps, IState> {
     public render(): JSX.Element {
         const { className, percent, successPercent, text, successPercentColor, percentColor } = this.props
         const { status } = this.state
-        let val = percent > 100 ? 100 : percent < 0 ? 0 : percent
-        let succerss = (successPercent || 0) > 100 ? 100 : (successPercent || 0) < 0 ? 0 : (successPercent || 0)
+        const val = percent > 100 ? 100 : percent < 0 ? 0 : percent
+        const succerss = (successPercent || 0) > 100 ? 100 : (successPercent || 0) < 0 ? 0 : (successPercent || 0)
         return (
             <div className={getClassName(`${prefixClass} flex`, className)}>
                 <div className="flex_1 flex_justify">

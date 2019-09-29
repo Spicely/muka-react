@@ -29,7 +29,7 @@ export interface INavBarProps {
     style?: CSSProperties
     left?: string | JSX.Element | null
     title?: string | JSX.Element
-    right?: string | JSX.Element | null | (INavBarRightIcon | INavBarRightImage)[]
+    right?: string | JSX.Element | null | INavBarRightImage[] | INavBarRightIcon[]
     fixed?: boolean
     endVal?: number
     divider?: boolean
@@ -48,23 +48,33 @@ export default class NavBar extends Component<INavBarProps, any> {
 
     public render(): JSX.Element {
         const { className, left, divider, title, right, fixed, leftClassName, titleCenter, titleClassName, rightClassName, style, onRightClick, children } = this.props
-        let rightValue: any
-        if (isArray(right)) {
-            rightValue = right.map((item: INavBarRightIcon | INavBarRightImage, index: number) => {
+        const c: any = right
+        let rightValue: any = []
+        if (isArray(c)) {
+            rightValue = c.map((item: INavBarRightIcon | INavBarRightImage, index: number) => {
                 if (item.type === 'icon') {
                     return (
                         <div className={getClassName(`${prefixClass}_right__item`)} key={index}>
-                            <Icon icon={item.url} color={item.color} onClick={this.handleClick.bind(this, item.link, item.onClick)} />
+                            <Icon
+                                icon={item.url}
+                                color={item.color}
+                                onClick={this.handleClick.bind(this, item.link, item.onClick)}
+                            />
                         </div>
 
                     )
-                } else if (item.type === "image") {
+                } else if (item.type === 'image') {
                     return (
                         <div className={getClassName(`${prefixClass}_right__item`)} key={index}>
-                            <Image className={getClassName(`${prefixClass}_right__img`)} src={item.url} onClick={this.handleClick.bind(this, item.link, item.onClick)} />
+                            <Image
+                                className={getClassName(`${prefixClass}_right__img`)}
+                                src={item.url}
+                                onClick={this.handleClick.bind(this, item.link, item.onClick)}
+                            />
                         </div>
                     )
                 }
+                return null
             })
         } else {
             rightValue = right
@@ -108,10 +118,10 @@ export default class NavBar extends Component<INavBarProps, any> {
         }
     }
 
-    private handleClick = (link?: string, onClick?: () => boolean) => {
+    private handleClick = (link?: string, onClick?: () => boolean | void) => {
         let status = true
         if (isFunction(onClick)) {
-            status = onClick()
+            status = onClick() || false
         }
         if (status && link) {
             Router.push(link)

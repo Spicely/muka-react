@@ -12,17 +12,19 @@ interface ICheckBoxOptionsProps {
     iconColor?: string
 }
 
+type typeItem = string | number | boolean
+
 export interface ICheckBoxProps {
     className?: string
     style?: CSSProperties
     options: ICheckBoxOptionsProps[]
     icon?: iconType
     iconColor?: string
-    value?: (string | number | boolean)[]
+    value?: typeItem[]
 }
 
 interface IState {
-    value: (string | number | boolean)[]
+    value: typeItem[]
 }
 
 const prefixClass = 'check_box'

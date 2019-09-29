@@ -7,10 +7,8 @@ export interface IUploadProps {
     className?: string
 }
 
-interface IState { }
-
 const prefixClass = 'upload'
-export default class Upload extends Component<IUploadProps, IState> {
+export default class Upload extends Component<IUploadProps> {
 
     public static Dragger = Dragger
 

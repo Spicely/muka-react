@@ -80,13 +80,15 @@ export default class Editor extends Component<IEditorProps, any> {
     }
 
     private imageHandler = (url: string) => {
-        if (typeof this.quillRef.getEditor !== 'function') return
+        if (typeof this.quillRef.getEditor !== 'function') {
+            return undefined
+        }
         const quill = this.quillRef.getEditor()
-        var range = quill.getSelection()
-        let index = range ? range.index : 0
-        quill.insertEmbed(index, "image", url, this.quill.Quill.sources.USER)
+        const range = quill.getSelection()
+        const index = range ? range.index : 0
+        quill.insertEmbed(index, 'image', url, this.quill.Quill.sources.USER)
         quill.setSelection(index + 1)
-    };
+    }
 
     private handleChange = (value: string) => {
         const { onChange } = this.props

@@ -34,7 +34,6 @@ export default class Button extends Component<IButtonProps, IState> {
         loading: false
     }
 
-
     public render(): JSX.Element {
         const { children, className, fixed, mold, disabled } = this.props
         const { loading } = this.state
@@ -54,7 +53,9 @@ export default class Button extends Component<IButtonProps, IState> {
     private handelOk = (e: ChangeEvent<HTMLElement>) => {
         const { onClick, async } = this.props
         const { loading } = this.state
-        if (loading) return
+        if (loading) {
+            return
+        }
         if (isFunction(onClick)) {
             if (async) {
                 this.setState({
