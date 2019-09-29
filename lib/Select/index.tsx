@@ -70,13 +70,13 @@ export default class Select extends Component<ISelectProps, IState> {
         )
     }
 
-    public componentWillReceiveProps(nextProps: ISelectProps) {
+    public UNSAFE_componentWillReceiveProps(nextProps: ISelectProps) {
         const { value } = this.state
         const { options } = this.props
-        if (isNil(nextProps.value) && !isUndefined(value) && nextProps.value !== value.value) {
+        if (nextProps.value !== value) {
             const data = options.find((i) => i.value === nextProps.value)
             this.setState({
-                value: data
+                value: data || null
             })
         }
     }

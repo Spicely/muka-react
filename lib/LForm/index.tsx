@@ -1,4 +1,4 @@
-import React, { Component, ChangeEvent } from 'react'
+import React, { Component, ChangeEvent, CSSProperties } from 'react'
 import Loadable from 'react-loadable'
 import moment from 'moment'
 import { omit, isFunction, isUndefined, hash, isBool } from 'muka'
@@ -14,19 +14,22 @@ import { ITextareaProps } from '../Textarea'
 import { IColorsProps, ColorResult } from '../Colors'
 import { ICarouselProps } from '../Carousel'
 import { ISelectProps } from '../Select'
+import { ICheckBoxProps } from '../CheckBox'
+import { IRangePicker } from '../RangePicker'
+import { IEditorProps } from '../Editor'
 
 interface ILFormUpload extends ILUpload {
     label?: string | JSX.Element
 }
 
-type component = 'Colors' | 'Input' | 'Button' | 'Radio' | 'DatePicker' | 'LUpload' | 'NULL' | 'Label' | 'RadioGroup' | 'Select' | 'ImagePicker' | 'Map' | 'Textarea' | 'Carousel' | 'Slider'
-type props = RadioGroupProps | IInputProps | IButtonProps | ILDatePicker | ILFormUpload | IImagePickerProps | IMapProps | ICarouselProps | ITextareaProps | IColorsProps | ISelectProps | undefined
+type component = 'Colors' | 'Input' | 'Button' | 'Radio' | 'DatePicker' | 'LUpload' | 'RangePicker' | 'NULL' | 'Label' | 'RadioGroup' | 'Select' | 'ImagePicker' | 'Map' | 'Textarea' | 'Carousel' | 'Slider' | 'CheckBox' | 'Editor'
+type props = RadioGroupProps | IInputProps | IButtonProps | ILDatePicker | ILFormUpload | IImagePickerProps | IMapProps | ICarouselProps | ITextareaProps | IColorsProps | ISelectProps | ICheckBoxProps | IEditorProps | undefined
 
 export interface ILFormItem {
     component: component
     props?: props
     field?: string
-    label?: string
+    label?: string | JSX.Element
     additional?: string | JSX.Element
     className?: string
     render?: boolean
@@ -36,6 +39,7 @@ export interface ILFormProps {
     getItems: (exFun: ILFormFun) => ILFormItem[]
     showType?: 'column' | 'row'
     className?: string
+    style?: CSSProperties
 }
 
 export interface ILFormFun {
@@ -54,7 +58,7 @@ interface IValue {
 interface ILFormChild {
     type: component
     field: string
-    label?: string
+    label?: string | JSX.Element
     className?: string
     props: IValue
     additional?: string | JSX.Element
@@ -138,6 +142,10 @@ export default class LForm extends Component<ILFormProps, IState> {
                     vals[field] = _porps.initColor || ''
                     // tslint:disable-next-line: align
                 } break
+                case 'CheckBox': {
+                    vals[field] = _porps.value || []
+                    // tslint:disable-next-line: align
+                } break
                 case 'LUpload': {
                     vals[field] = _porps.fileList || (_porps.maxLength > 1 ? [] : '')
                     // tslint:disable-next-line: align
@@ -172,7 +180,7 @@ export default class LForm extends Component<ILFormProps, IState> {
         }
     }
 
-    public componentWillReceiveProps(nextProps: ILFormProps) {
+    public UNSAFE_componentWillReceiveProps(nextProps: ILFormProps) {
         const { getItems } = nextProps
         const { childs, vals } = this.state
         const items = getItems(this.lref)
@@ -217,6 +225,14 @@ export default class LForm extends Component<ILFormProps, IState> {
                         vals[field] = _porps.value || []
                         // tslint:disable-next-line: align
                     } break
+                    case 'CheckBox': {
+                        vals[field] = _porps.value || []
+                        // tslint:disable-next-line: align
+                    } break
+                    case 'RangePicker': {
+                        vals[field] = _porps.value || []
+                        // tslint:disable-next-line: align
+                    } break
                     case 'Map': {
                         vals[field] = _porps.value || {}
                         // tslint:disable-next-line: align
@@ -248,10 +264,10 @@ export default class LForm extends Component<ILFormProps, IState> {
     }
 
     public render(): JSX.Element {
+        const { className, showType, style } = this.props
         const { childs } = this.state
-        const { className, showType } = this.props
         return (
-            <div className={getClassName(`l_form ${showType}`, className)}>
+            <div className={getClassName(`l_form ${showType}`, className)} style={style}>
                 {childs.map((item: ILFormChild, index: number) => {
                     if (item.view && item.render) {
                         return this.setTypeCom(this.items[index].component, item.view, item.props, item.field, index, item.className, item.label, item.additional)
@@ -301,6 +317,7 @@ export default class LForm extends Component<ILFormProps, IState> {
     // tslint:disable-next-line: no-shadowed-variable
     private typeChild(component: component) {
         switch (component) {
+            case 'Editor': return loadableComponent(import('../Editor'))
             case 'Input': return loadableComponent(import('../Input'))
             case 'Button': return loadableComponent(import('../Button'))
             case 'Radio': return loadableComponent(import('../Radio/Group'))
@@ -314,13 +331,15 @@ export default class LForm extends Component<ILFormProps, IState> {
             case 'Textarea': return loadableComponent(import('../Textarea'))
             case 'Colors': return loadableComponent(import('../Colors'))
             case 'Carousel': return loadableComponent(import('../Carousel'))
+            case 'RangePicker': return loadableComponent(import('../RangePicker'))
+            case 'CheckBox': return loadableComponent(import('../CheckBox'))
             case 'Slider': return loadableComponent(import('antd/lib/slider'))
             default: return null
         }
     }
 
     // tslint:disable-next-line: no-shadowed-variable
-    private setTypeCom(component: component, View: any, props: props, field: string | undefined, key: number | string, className?: string, label?: string, additional?: string | JSX.Element): JSX.Element | null {
+    private setTypeCom(component: component, View: any, props: props, field: string | undefined, key: number | string, className?: string, label?: string | JSX.Element, additional?: string | JSX.Element): JSX.Element | null {
         const { vals } = this.state
         /// 得到field
         field = field ? field : `${component}_${key}`
@@ -347,7 +366,7 @@ export default class LForm extends Component<ILFormProps, IState> {
                                 />
                             </div>
                         </div>
-                        {additional && <div className={getClassName(`${prefixClass}__list_label flex_justify`)}>{additional}</div>}
+                        {additional && <div className={getClassName(`${prefixClass}__additional flex_justify`)}>{additional}</div>}
                     </div>
                 )
             }
@@ -369,7 +388,7 @@ export default class LForm extends Component<ILFormProps, IState> {
                                 />
                             </div>
                         </div>
-                        {additional && <div className={getClassName(`${prefixClass}__list_label flex_justify`)}>{additional}</div>}
+                        {additional && <div className={getClassName(`${prefixClass}__additional flex_justify`)}>{additional}</div>}
                     </div>
                 )
             }
@@ -393,17 +412,20 @@ export default class LForm extends Component<ILFormProps, IState> {
                 )
             }
             case 'Carousel': {
-                const _porps: any = props
                 const vProps = omit(props, ['onChange'])
                 return (
-                    <div className={getClassName(`${prefixClass}__list  flex`, className)} key={field}>
-                        {label && <div className={getClassName(`${prefixClass}__list_label flex_justify`)}>{label}</div>}
-                        <div className="flex_1">
-                            <View
-                                {...vProps}
-                                key={field}
-                            />
+                    <div className={getClassName(`${prefixClass}__list`, className)} key={field}>
+                        <div className="flex" >
+                            {label && <div className={getClassName(`${prefixClass}__list_label`)}>{label}</div>}
+                            <div className="flex_1">
+                                <View
+                                    {...vProps}
+                                    value={vals[field]}
+                                    key={field}
+                                />
+                            </div>
                         </div>
+                        {additional && <div className={getClassName(`${prefixClass}__additional flex_justify`)}>{additional}</div>}
                     </div>
                 )
             }
@@ -436,6 +458,48 @@ export default class LForm extends Component<ILFormProps, IState> {
                             {label && <div className={getClassName(`${prefixClass}__list_label`)} style={{ paddingTop: '5px' }}>{label}</div>}
                             <div className="flex_1">
                                 <View {...vProps} key={field} className={getClassName(`${prefixClass}_btn`, _porps.className)} />
+                            </div>
+                        </div>
+                        {additional && <div className={getClassName(`${prefixClass}__additional flex_justify`)}>{additional}</div>}
+                    </div>
+                )
+            }
+            case 'Editor': {
+                const vProps = omit(props, ['onChange', 'value'])
+                const _porps: any = props
+                const onChange: any = _porps.onChange
+                return (
+                    <div className={getClassName(`${prefixClass}__list flex_justify`, className)} key={field}>
+                        <div className="flex">
+                            {label && <div className={getClassName(`${prefixClass}__list_label`)} style={{ paddingTop: '5px' }}>{label}</div>}
+                            <div className="flex_1">
+                                <View
+                                    {...vProps}
+                                    key={field}
+                                    value={vals[field]}
+                                    onChange={this.setRVal.bind(this, field, onChange)}
+                                />
+                            </div>
+                        </div>
+                        {additional && <div className={getClassName(`${prefixClass}__additional flex_justify`)}>{additional}</div>}
+                    </div>
+                )
+            }
+            case 'CheckBox': {
+                const vProps = omit(props, ['onChange', 'value'])
+                const _porps: any = props
+                const onChange: any = _porps.onChange
+                return (
+                    <div className={getClassName(`${prefixClass}__list flex_justify`, className)} key={field}>
+                        <div className="flex">
+                            {label && <div className={getClassName(`${prefixClass}__list_label`)}>{label}</div>}
+                            <div className="flex_1">
+                                <View
+                                    {...vProps}
+                                    key={field}
+                                    value={vals[field]}
+                                    onChange={this.setRVal.bind(this, field, onChange)}
+                                />
                             </div>
                         </div>
                         {additional && <div className={getClassName(`${prefixClass}__additional flex_justify`)}>{additional}</div>}
@@ -478,16 +542,47 @@ export default class LForm extends Component<ILFormProps, IState> {
                 )
             }
             case 'DatePicker': {
-                const vProps = omit(props, ['onChange'])
+                const vProps = omit(props, ['onChange', 'className'])
                 const _porps: any = props
                 const onChange: any = _porps.onChange
                 return (
-                    <View
-                        {...vProps}
-                        key={field}
-                        value={vals[field] ? moment(vals[field]) : null}
-                        onChange={this.setDatePickerVal.bind(this, field, onChange)}
-                    />
+                    <div className={getClassName(`${prefixClass}__list flex_justify`, className)} key={field}>
+                        <div className="flex">
+                            {label && <div className={getClassName(`${prefixClass}__list_label`)} style={{ paddingTop: '5px' }}>{label}</div>}
+                            <div className="flex_1 flex">
+                                <View
+                                    {...vProps}
+                                    key={field}
+                                    className={`flex_1 ${_porps.className || ''}`}
+                                    value={vals[field] ? moment(vals[field]) : null}
+                                    onChange={this.setDatePickerVal.bind(this, field, onChange)}
+                                />
+                            </div>
+                        </div>
+                        {additional && <div className={getClassName(`${prefixClass}__additional flex_justify`)}>{additional}</div>}
+                    </div>
+                )
+            }
+            case 'RangePicker': {
+                const vProps = omit(props, ['onChange', 'className'])
+                const _porps: any = props
+                const onChange: any = _porps.onChange
+                return (
+                    <div className={getClassName(`${prefixClass}__list flex_justify`, className)} key={field}>
+                        <div className="flex">
+                            {label && <div className={getClassName(`${prefixClass}__list_label`)} style={{ paddingTop: '5px' }}>{label}</div>}
+                            <div className="flex_1 flex">
+                                <View
+                                    {...vProps}
+                                    key={field}
+                                    className={`flex_1 ${_porps.className || ''}`}
+                                    value={vals[field] ? vals[field].map((i: string) => moment(i)) : null}
+                                    onChange={this.setDatePickerVal.bind(this, field, onChange)}
+                                />
+                            </div>
+                        </div>
+                        {additional && <div className={getClassName(`${prefixClass}__additional flex_justify`)}>{additional}</div>}
+                    </div>
                 )
             }
             case 'ImagePicker': {
@@ -721,6 +816,14 @@ export default class LForm extends Component<ILFormProps, IState> {
                     vals[field] = []
                     // tslint:disable-next-line: align
                 } break
+                case 'CheckBox': {
+                    vals[field] = []
+                    // tslint:disable-next-line: align
+                } break
+                case 'RangePicker': {
+                    vals[field] = []
+                    // tslint:disable-next-line: align
+                } break
                 case 'ImagePicker': {
                     vals[field] = props.value ? props.value : []
                     // tslint:disable-next-line: align
@@ -776,10 +879,12 @@ export default class LForm extends Component<ILFormProps, IState> {
     }
 
     private updateFieldProps(params: IValue = {}) {
-        const { childs } = this.state
-        const keys = Object.keys(params)
+        const { childs, vals } = this.state
         const newChilds = childs.map((i: ILFormChild) => {
             if (hash(params, i.field)) {
+                if (i.type === 'Select' && params[i.field].value) {
+                    vals[i.field] = params[i.field].value
+                }
                 i.props = {
                     ...i.props,
                     ...params[i.field]
@@ -788,7 +893,8 @@ export default class LForm extends Component<ILFormProps, IState> {
             return i
         })
         this.setState({
-            childs: newChilds
+            childs: newChilds,
+            vals: { ...vals }
         })
     }
 

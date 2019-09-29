@@ -12,7 +12,7 @@ export interface IDividerProps {
 export default class Divider extends Component<IDividerProps, any> {
 
     public static defaultProps: IDividerProps = {
-        color: '#cccccc',
+        color: '#e6e6e6',
         type: 'vertical'
     }
 

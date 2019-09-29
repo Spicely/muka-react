@@ -58,6 +58,10 @@
         border-radius: 13 * @unit;
 
         .@{prefix}radio_label {
+            flex: 1;
+            margin-left: 0;
+            vertical-align: initial;
+            text-align: center;
             top: 0;
         }
 
@@ -94,9 +98,16 @@
     }
 
     &.@{prefix}square {
-        .@{prefix}radio {
-            &_btn {
-                border-radius: 4 * @unit;
+        display: inline-block;
+        vertical-align: middle;
+
+        .@{prefix}radio_btn {
+            width: @radio_height;
+            height: @radio_height;
+            border: 1 * @unit solid #b4b4b4;
+
+            .@{prefix}radio__icon {
+                vertical-align: 1 * @unit;
             }
         }
     }
@@ -105,6 +116,5 @@
         font-size: 12 * @unit;
         vertical-align: middle;
         line-height: @radio_height;
-        margin-left: 5 * @unit;
     }
 }

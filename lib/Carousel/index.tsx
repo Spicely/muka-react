@@ -176,7 +176,7 @@ export default class Carousel extends Component<ICarouselProps, IState> {
         }
     }
 
-    public componentWillReceiveProps(nextProps: ICarouselProps) {
+    public UNSAFE_componentWillReceiveProps(nextProps: ICarouselProps) {
         const { autoplay, selected, time } = this.props
         if (autoplay !== nextProps.autoplay) {
             if (nextProps.autoplay && !this.timer) {

@@ -2,7 +2,7 @@ import React, { CSSProperties, Component } from 'react'
 import { isFunction, isBool, isUndefined } from 'muka'
 import RadioGroup from './Group'
 import { getClassName, prefix } from '../utils'
-import Icon from '../Icon'
+import Icon, { iconType } from '../Icon'
 
 export type IRadioType = 'square' | 'button' | 'circular'
 
@@ -13,11 +13,14 @@ export interface IRadioProps {
     onChange?: (val: boolean) => void
     type?: IRadioType
     style?: CSSProperties
+    icon?: iconType
+    iconColor?: string
     children?: string | JSX.Element
 }
 
 interface IState {
     status: boolean
+    checked: boolean
 }
 
 const prefixClass = 'radio'
@@ -29,14 +32,30 @@ export default class Radio extends Component<IRadioProps, IState> {
         this.state.status = props.checked || props.defaultChecked || false
     }
 
+    public static defaultProps: IRadioProps = {
+        type: 'circular'
+    }
+
+    public static getDerivedStateFromProps(nextProps: IRadioProps, prevState: IState) {
+        const { checked } = prevState
+        if (isBool(checked) && checked !== nextProps.checked) {
+            return {
+                status: nextProps.checked,
+                checked
+            }
+        }
+        return {}
+    }
+
     public static Group = RadioGroup
 
     public state = {
-        status: false
+        status: false,
+        checked: false
     }
 
     public render(): JSX.Element {
-        const { className, children, checked, type, style } = this.props
+        const { className, children, checked, type, style, icon, iconColor } = this.props
         const { status } = this.state
         return (
             <div
@@ -45,19 +64,27 @@ export default class Radio extends Component<IRadioProps, IState> {
                 onClick={this.handleClick}
             >
                 <div className="flex">
-                    {(type === 'square' || type === 'circular') && (
-                        <div className={getClassName(`${prefixClass}_btn`)}>
-                            {(isBool(checked) ? checked : status) && <Icon className="icon" icon="md-checkmark" fontSize="0.8rem" />}
+                    {type === 'square' ? (
+                        <div className={getClassName(`${prefixClass}_btn flex_justify`)}>
+                            {
+                                (isBool(checked) ? checked : status) ?
+                                    <Icon className={getClassName(`${prefixClass}__icon`)}
+                                        icon={icon || 'md-checkmark'}
+                                        fontSize="0.8rem"
+                                        color={iconColor}
+                                    />
+                                    : null
+                            }
                         </div>
-                    )}
+                    ) : null}
                     {
-                        isUndefined(type) && (
+                        type === 'circular' ? (
                             <div className={getClassName(`${prefixClass}_core`)}>
                                 <div className="flex_center" style={{ width: '100%', height: '100%' }}>
                                     <div className={getClassName(`${prefixClass}_core_circle ${status ? prefix + prefixClass + '_show' : prefix + prefixClass + '_hide'}`)} />
                                 </div>
                             </div>
-                        )
+                        ) : null
                     }
                     <span className={getClassName(`${prefixClass}_label`)}>
                         {children}
@@ -67,24 +94,13 @@ export default class Radio extends Component<IRadioProps, IState> {
         )
     }
 
-    public componentWillReceiveProps(nextProps: IRadioProps) {
-        const { checked } = this.props
-        if (isBool(nextProps.checked) && checked !== nextProps.checked) {
-            this.setState({
-                status: nextProps.checked
-            })
-        }
-    }
-
     private handleClick = () => {
         const { checked, onChange } = this.props
-        const { status } = this.state
-        if ((isBool(checked) && checked) || status) return
         if (isFunction(onChange)) {
-            onChange(isBool(checked) ? !checked : !status)
+            onChange(isBool(checked) ? checked ? true : false : true)
         }
         this.setState({
-            status: isBool(checked) ? !checked : !status
+            status: isBool(checked) ? checked ? true : false : true
         })
     }
 }

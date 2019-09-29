@@ -134,7 +134,7 @@ export default class TabItem extends Component<IProps, IState> {
         clearTimeout(this.timer)
     }
 
-    public componentWillReceiveProps(nextPorps: any) {
+    public UNSAFE_componentWillReceiveProps(nextPorps: any) {
         const { label } = this.props
         if (nextPorps.label !== label) {
             this.timer = setTimeout(() => {

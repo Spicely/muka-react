@@ -1,29 +1,33 @@
-import * as React from 'react'
+import React, { Component, CSSProperties } from 'react'
 import { isBool, isFunction } from 'muka'
 import Icon from '../Icon'
 import { getClassName } from '../utils'
 
 export interface IItemProps {
-    activeClass?: string
+    activeClassName?: string
+    titleClassName?: string
+    labelClassName?: string
     className?: string
+    style?: CSSProperties
     title?: string | JSX.Element | JSX.ElementClass
     link?: boolean
     value?: string | JSX.Element | JSX.ElementClass
     extend?: string | JSX.Element | JSX.ElementClass
     icon?: string | JSX.Element | JSX.ElementClass
     onPress?: () => void
-    lineType?: 'solid' | 'dashed'
+    lineType?: 'solid' | 'dashed' | 'none'
 }
 
 interface IState {
     active: boolean
 }
 
-export default class Item extends React.Component<IItemProps, IState> {
+export default class Item extends Component<IItemProps, IState> {
 
     public static defaultProps = {
         activeClass: 'active',
         title: '',
+        lineType: 'solid'
     }
 
     public state = {
@@ -34,24 +38,23 @@ export default class Item extends React.Component<IItemProps, IState> {
 
     private moveNum: number = 0
 
-    private node: HTMLDivElement | null = null
-
     public render(): JSX.Element {
-        const { activeClass, lineType, className, extend, title, value, link } = this.props
+        const { activeClassName, lineType, className, extend, title, value, link, titleClassName, labelClassName, style } = this.props
         const { active } = this.state
-        const activeClassName = active ? activeClass : ''
+        const activeClass = active ? activeClassName : ''
         return (
             <div
-                className={getClassName(`item flex_justify${link ? ` ${activeClassName}` : ''} line_${lineType || 'solid'}`, className)}
-                ref={(event: HTMLDivElement) => { this.node = event }}
+                className={getClassName(`item flex_justify${link ? ` ${activeClass}` : ''} ${lineType === 'none' ? '' : 'line_' + lineType}`, className)}
+                style={style}
                 onClick={this.handlePress}
                 onTouchStart={this.handleAddActive}
                 onTouchMove={this.handleMove}
                 onTouchEnd={this.handleRemoveActive}
+                onTransitionEnd={this.closeAnimation}
             >
                 <div className="flex">
-                    <div className={getClassName('item_title flex_1 flex_justify')}>{title}</div>
-                    <div className={getClassName('item_right flex_justify')}>
+                    <div className={getClassName('item_title flex_1 flex_justify', titleClassName)}>{title}</div>
+                    <div className={getClassName('item_right flex_justify', labelClassName)}>
                         {value}
                     </div>
                     {this.getLinkNode()}
@@ -60,25 +63,12 @@ export default class Item extends React.Component<IItemProps, IState> {
             </div>
         )
     }
-
-    public componentDidMount() {
-        if (this.node) {
-            this.node.addEventListener('transitionend', this.closeAnimation)
-        }
-    }
-
-    public componentWillUnmount() {
-        if (this.node) {
-            this.node.removeEventListener('transitionend', this.closeAnimation)
-        }
-    }
-
     private getLinkNode(): JSX.Element | void {
         const { link, icon } = this.props
         if (link) {
             return (
                 <div className={getClassName('item_link flex_justify')}>
-                    {icon || <Icon className={getClassName('item_link__icon')} icon="ios-arrow-forward"  color="#B6B6B6"/>}
+                    {icon || <Icon className={getClassName('item_link__icon')} icon="ios-arrow-forward" color="#B6B6B6" />}
                 </div>
             )
         }

@@ -2,7 +2,7 @@ import React, { Component, MouseEvent, CSSProperties, HtmlHTMLAttributes } from 
 import { getClassName } from '../utils'
 import { omit } from 'muka'
 
-export type iconType = 'logo-google' | 'ios-refresh' | 'md-refresh' | 'ios-document' | 'md-document' | 'md-more' | 'md-arrow-down' | 'ios-image' | 'ios-more' | 'ios-paper-plane' | 'ios-arrow-forward' | 'md-close-circle' | 'ios-arrow-down' | 'md-thumbs-up' | 'md-thumbs-down' | 'ios-home' | 'md-home' | 'ios-arrow-dropdown' | 'md-arrow-dropdown' | 'custom-service' | 'md-volume-mute' | 'ios-volume-high' | 'menu-open' | 'menu-close' | 'ios-close-circle-outline' | 'ios-close' | 'md-close' | 'md-checkmark' | 'ios-checkmark' | 'md-add' | 'ios-add' | 'loading' | 'ios-menu' | 'ios-settings' | 'ios-settings-outline' | 'md-settings' | 'ios-keypad' | 'ios-arrow-back-outline' | 'md-create' | 'ios-arrow-back' | 'md-arrow-back' | 'md-search' | 'ios-search' | 'ios-search-outline' | 'md-exit' | 'ios-exit' | 'shop' | 'double-arrow-left' | 'double-arrow-right' | 'shopping' | 'md-person' | 'ios-person' | 'shop-setting' | 'md-gift' | 'ios-gift' | 'purse' | 'md-trending-up' | 'ios-trending-up' | 'small-routine' | 'md-apps' | 'ios-apps' | 'md-remove' | 'ios-remove' | 'md-close-circle-outline' | 'ios-close-circle-outline' | 'md-expand' | 'ios-expand' | 'md-contract' | 'ios-contract' | 'msg' | 'file_box' | 'notifice'
+export type iconType = 'logo-google' | 'ios-refresh' | 'md-refresh' | 'ios-document' | 'md-document' | 'md-more' | 'md-arrow-down' | 'ios-image' | 'ios-more' | 'ios-paper-plane' | 'ios-arrow-forward' | 'md-close-circle' | 'ios-arrow-down' | 'md-thumbs-up' | 'md-thumbs-down' | 'ios-home' | 'md-home' | 'ios-arrow-dropdown' | 'md-arrow-dropdown' | 'custom-service' | 'md-volume-mute' | 'ios-volume-high' | 'menu-open' | 'menu-close' | 'ios-close-circle-outline' | 'ios-close' | 'md-close' | 'md-checkmark' | 'ios-checkmark' | 'md-add' | 'ios-add' | 'loading' | 'ios-menu' | 'ios-settings' | 'ios-settings-outline' | 'md-settings' | 'ios-keypad' | 'ios-arrow-back-outline' | 'md-create' | 'ios-arrow-back' | 'md-arrow-back' | 'md-search' | 'ios-search' | 'ios-search-outline' | 'md-exit' | 'ios-exit' | 'shop' | 'double-arrow-left' | 'double-arrow-right' | 'shopping' | 'md-person' | 'ios-person' | 'shop-setting' | 'md-gift' | 'ios-gift' | 'purse' | 'md-trending-up' | 'ios-trending-up' | 'small-routine' | 'md-apps' | 'ios-apps' | 'md-remove' | 'ios-remove' | 'md-close-circle-outline' | 'ios-close-circle-outline' | 'md-expand' | 'ios-expand' | 'md-contract' | 'ios-contract' | 'msg' | 'file_box' | 'notifice' | 'md-lock' | 'ios-lock' | 'loading' | 'md-folder' | 'ios-folder' | 'security'| 'ios-filing' | 'md-filing'
 
 export interface IIconProps extends HtmlHTMLAttributes<any> {
     icon?: iconType
@@ -18,6 +18,7 @@ export interface IIconProps extends HtmlHTMLAttributes<any> {
 
 interface IState {
     path: string
+    icon: iconType | undefined
     viewBox: string
 }
 
@@ -38,6 +39,8 @@ const paths: any = {
     'ios-document': import('./ios/document').then((data) => data.default),
     'md-expand': import('./md/expand').then((data) => data.default),
     'ios-expand': import('./ios/expand').then((data) => data.default),
+    'md-filing': import('./md/filing').then((data) => data.default),
+    'ios-filing': import('./ios/filing').then((data) => data.default),
     'md-trending-up': import('./md/trending-up').then((data) => data.default),
     'ios-trending-up': import('./ios/trending-up').then((data) => data.default),
     'md-gift': import('./md/gift').then((data) => data.default),
@@ -58,12 +61,16 @@ const paths: any = {
     'ios-arrow-forward': import('./ios/arrow-forward').then((data) => data.default),
     'md-checkmark': import('./md/checkmark').then((data) => data.default),
     'ios-checkmark': import('./ios/checkmark').then((data) => data.default),
+    'md-folder': import('./md/folder').then((data) => data.default),
+    'ios-folder': import('./ios/folder').then((data) => data.default),
     'md-close-circle-outline': import('./md/close-circle-outline').then((data) => data.default),
     'ios-close-circle-outline': import('./ios/close-circle-outline').then((data) => data.default),
     'md-close-circle': import('./md/close-circle').then((data) => data.default),
     'ios-close-circle': import('./ios/close-circle').then((data) => data.default),
     'md-settings': import('./md/settings').then((data) => data.default),
     'ios-settings': import('./ios/settings').then((data) => data.default),
+    'md-lock': import('./md/lock').then((data) => data.default),
+    'ios-lock': import('./ios/lock').then((data) => data.default),
     'menu-open': import('./global/menu-open').then((data) => data.default),
     'menu-close': import('./global/menu-close').then((data) => data.default),
     'shop': import('./global/shop').then((data) => data.default),
@@ -76,6 +83,8 @@ const paths: any = {
     'msg': import('./global/msg').then((data) => data.default),
     'file_box': import('./global/file_box').then((data) => data.default),
     'notifice': import('./global/notifice').then((data) => data.default),
+    'loading': import('./global/loading').then((data) => data.default),
+    'security': import('./global/security').then((data) => data.default),
 }
 
 export default class Icon extends Component<IIconProps, IState> {
@@ -88,8 +97,12 @@ export default class Icon extends Component<IIconProps, IState> {
         beat: false,
         rotate: false,
     }
-
+    constructor(props: IIconProps) {
+        super(props)
+        this.state.icon = props.icon
+    }
     public state: IState = {
+        icon: undefined,
         path: '',
         viewBox: '0 0 512 512',
     }
@@ -99,7 +112,7 @@ export default class Icon extends Component<IIconProps, IState> {
         this.getPathByIconName(icon)
     }
 
-    public componentWillReceiveProps(nextProps: IIconProps) {
+    public UNSAFE_componentWillReceiveProps(nextProps: IIconProps) {
         const { icon } = this.props
         if (icon !== nextProps.icon) {
             this.getPathByIconName(nextProps.icon)
@@ -135,13 +148,12 @@ export default class Icon extends Component<IIconProps, IState> {
         )
     }
 
-    private getPathByIconName = (icon?: iconType) => {
+    private getPathByIconName = async (icon?: iconType) => {
         if (icon && paths[icon]) {
-            paths[icon].then((data: { path: string[], viewBox: string }) => {
-                this.setState({
-                    path: data.path.join(' '),
-                    viewBox: data.viewBox
-                })
+            const data = await paths[icon]
+            this.setState({
+                path: data.path.join(' '),
+                viewBox: data.viewBox
             })
         }
     }

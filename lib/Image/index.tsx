@@ -64,7 +64,7 @@ export default class Image extends Component<IImageProps, IState> {
         )
     }
 
-    public componentWillReceiveProps(nextProps: IImageProps) {
+    public UNSAFE_componentWillReceiveProps(nextProps: IImageProps) {
         const { src } = this.props
         if (this.controller) {
             this.controller.removeEventListener('scroll', this.handleScroll)

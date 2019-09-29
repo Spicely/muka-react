@@ -38,7 +38,7 @@ export default class Pagination extends Component<IPaginationProps, IState> {
         pageSize: 10
     }
 
-    public componentWillReceiveProps(nextProps: IPaginationProps) {
+    public UNSAFE_componentWillReceiveProps(nextProps: IPaginationProps) {
         const { pageSize } = this.state
         if (nextProps.pageSize && nextProps.pageSize !== pageSize) {
             this.setState({

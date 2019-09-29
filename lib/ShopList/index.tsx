@@ -110,7 +110,7 @@ export default class ShopList extends Component<IShopListProps, IState> {
         )
     }
 
-    public componentWillReceiveProps(nextProps: IShopListProps) {
+    public UNSAFE_componentWillReceiveProps(nextProps: IShopListProps) {
         const { dataList } = this.props
         if (dataList.length !== nextProps.dataList.length) {
             const result = this.getResultData(nextProps.dataList)

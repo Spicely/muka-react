@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
 import { isUndefined, isFunction } from 'muka'
-import { getClassName } from '../utils'
+import { getClassName, IValue } from '../utils'
 import Radio, { IRadioType } from './index'
+
 
 export interface IRadioGroupOptions {
     label: string
@@ -14,7 +15,7 @@ export interface IRadioGroupProps {
     type?: IRadioType
     value?: string | number | boolean
     options: IRadioGroupOptions[]
-    onChange?: (value: string | number | boolean) => void
+    onChange?: (value: string | number | boolean, data: IValue) => void
 }
 
 interface IState {
@@ -41,19 +42,28 @@ export default class RadioGroup extends Component<IRadioGroupProps, IState> {
     public render(): JSX.Element {
         const { className, options, type } = this.props
         const { value } = this.state
-        
+
         return (
             <div className={getClassName(`${prefixClass}`, className)}>
                 {
                     options.map((i, index: number) => {
-                        return <Radio className={i.className} key={index} type={type} onChange={this.handleRadioChange.bind(this, i.value)} checked={i.value === value}>{i.label}</Radio>
+                        return (
+                            <Radio
+                                className={i.className}
+                                key={index} type={type}
+                                onChange={this.handleRadioChange.bind(this, i.value, i)}
+                                checked={i.value === value}
+                            >
+                                {i.label}
+                            </Radio>
+                        )
                     })
                 }
             </div>
         )
     }
 
-    public componentWillReceiveProps(nextProps: IRadioGroupProps) {
+    public UNSAFE_componentWillReceiveProps(nextProps: IRadioGroupProps) {
         const { value } = this.props
         if (!isUndefined(nextProps.value) && nextProps.value !== value) {
             this.setState({
@@ -62,11 +72,11 @@ export default class RadioGroup extends Component<IRadioGroupProps, IState> {
         }
     }
 
-    private handleRadioChange(value: string | number | boolean) {
+    private handleRadioChange(value: string | number | boolean, data: IValue) {
         const { onChange } = this.props
         this.setState({ value })
         if (isFunction(onChange)) {
-            onChange(value)
+            onChange(value, data)
         }
     }
 }

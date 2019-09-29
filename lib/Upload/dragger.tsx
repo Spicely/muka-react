@@ -1,10 +1,23 @@
 import React, { Component, ChangeEvent, DragEvent, CSSProperties } from 'react'
-import axios, { AxiosPromise } from 'axios'
+import axios from 'axios'
 import { isString, isArray, isNumber, isObject, isFunction } from 'muka'
 import { getClassName, IValue } from '../utils'
 import { Consumer } from '../ConfigProvider'
 import Icon, { iconType } from '../Icon'
 import Progress from '../Progress'
+
+export interface IUploadFileListProps {
+    file: File
+    url?: string
+    preUrl?: string
+    xhr?: any
+    info: {
+        fileName?: string
+        type?: string
+        progress: number
+        status: 'error' | 'done' | 'uploading'
+    }
+}
 
 export interface IUploadProps {
     className?: string
@@ -17,27 +30,21 @@ export interface IUploadProps {
     multiple: boolean
     fileTypes?: string[]
     baserUrl?: string
+    maxFileSize?: number
     maxLength?: number
     style?: CSSProperties
     name?: string
     withCredentials?: boolean
     data?: IValue
+    headers?: IValue
     fileList?: IUploadFileListProps[]
     renderItem?: (val: IUploadFileListProps) => JSX.Element[] | null[] | undefined[]
-    onUploadSuccess?: (val: IUploadFileListProps, data: any) => void
-}
-
-interface IUploadFileListProps {
-    file: File
-    url?: string
-    preUrl?: string
-    xhr?: AxiosPromise
-    info: {
-        fileName?: string
-        type?: string
-        progress: number
-        status: 'error' | 'done' | 'uploading'
-    }
+    onUploadSuccess?: (val: IUploadFileListProps, data: any, files: IUploadFileListProps[]) => void
+    onUploadError?: (val: IUploadFileListProps, data: any, files: IUploadFileListProps[]) => void
+    onFileTypeError?: () => void
+    onUploadItemClear?: (delVal: IUploadFileListProps, data: IUploadFileListProps[]) => void
+    onUploadStart?: () => boolean
+    onMaxFileSizeError?: () => void
 }
 
 interface IState {
@@ -54,7 +61,8 @@ export default class Upload extends Component<IUploadProps, IState> {
     }
 
     public static defaultProps: IUploadProps = {
-        multiple: true
+        multiple: true,
+        onUploadStart: () => true
     }
 
     private intNode: null | HTMLInputElement = null
@@ -66,7 +74,7 @@ export default class Upload extends Component<IUploadProps, IState> {
     }
 
     public render(): JSX.Element {
-        const { className, children, icon, title, label, iconColor, multiple, uploadViewClassName, renderItem, style } = this.props
+        const { className, children, icon, title, label, iconColor, multiple, uploadViewClassName, renderItem, style, fileTypes } = this.props
         const { fileList } = this.state
         return (
             <Consumer>
@@ -77,7 +85,7 @@ export default class Upload extends Component<IUploadProps, IState> {
                         const titleProps = title || (value.uploadDraggerProps && value.uploadDraggerProps.title)
                         const labelProps = label || (value.uploadDraggerProps && value.uploadDraggerProps.label)
                         return (
-                            <div className={getClassName(`${prefixClass}`, className)} style={style}>
+                            <div className={getClassName(`${prefixClass}`)} style={style}>
                                 <div className={getClassName(`${prefixClass}__box`, className)} onClick={this.handleClick} onDragOver={this.handleDropOver} onDrop={this.handleFileDrop}>
                                     {
                                         children ? children : (
@@ -94,7 +102,7 @@ export default class Upload extends Component<IUploadProps, IState> {
                                             </div>
                                         )
                                     }
-                                    <input style={{ display: 'none' }} type="file" multiple={multiple} ref={(e) => this.intNode = e} onChange={this.handleFileChange} />
+                                    <input style={{ display: 'none' }} type="file" multiple={multiple} ref={(e) => this.intNode = e} onChange={this.handleFileChange} accept={(fileTypes || []).join(',')} />
                                 </div>
                                 <div className={getClassName(`${prefixClass}_upload__view`, uploadViewClassName)}>
                                     {
@@ -102,7 +110,7 @@ export default class Upload extends Component<IUploadProps, IState> {
                                             if (isFunction(renderItem)) {
                                                 return renderItem(i)
                                             } else {
-                                                if (!i.info.fileName || !i.info.type) return
+                                                if (!i.info.fileName && !i.info.type) return
                                                 return (
                                                     <div className={getClassName(`${prefixClass}_upload__view__item flex`)} key={index}>
                                                         <div className={getClassName(`${prefixClass}_upload__view__item__icon flex_center`)}>
@@ -113,6 +121,9 @@ export default class Upload extends Component<IUploadProps, IState> {
                                                         <div className={getClassName(`${prefixClass}_upload__view__item__progress flex_1`)}>
                                                             <div>{i.info.fileName}</div>
                                                             <Progress percent={i.info.progress} text={`${i.info.progress}%`} />
+                                                        </div>
+                                                        <div className={getClassName(`${prefixClass}_upload__view__item__close`)}>
+                                                            <Icon icon="ios-close" color="#fff" fontSize="16px" onClick={this.handleItemClose.bind(this, index)} />
                                                         </div>
                                                     </div>
                                                 )
@@ -128,6 +139,15 @@ export default class Upload extends Component<IUploadProps, IState> {
         )
     }
 
+    public UNSAFE_componentWillReceiveProps(nextProps: IUploadProps) {
+        const { fileList } = this.state
+        if (nextProps.fileList && fileList.length !== nextProps.fileList.length) {
+            this.setState({
+                fileList: nextProps.fileList
+            })
+        }
+    }
+
     private handleClick = () => {
         if (this.intNode) {
             this.intNode.click()
@@ -136,10 +156,14 @@ export default class Upload extends Component<IUploadProps, IState> {
 
     private getTypeView = (type: string, url?: string) => {
         if (type.includes('jpeg') || type.includes('png') || type.includes('jpg')) {
-            return <div style={{
-                width: '100%', height: '100%', backgroundImage: `url(${url})`, backgroundSize: '100% auto',
-                backgroundPosition: 'center'
-            }} />
+            return (
+                <div
+                    style={{
+                        width: '100%', height: '100%', backgroundImage: `url(${url})`, backgroundSize: '100% auto',
+                        backgroundPosition: 'center'
+                    }}
+                />
+            )
         } else {
             return <Icon icon="md-document" color="rgba(0, 0, 0, 0.45)" />
         }
@@ -162,36 +186,55 @@ export default class Upload extends Component<IUploadProps, IState> {
         if (files) {
             this.updLoadFiles(files)
         }
+        e.currentTarget.value = ''
     }
 
     private updLoadFiles = (files: FileList) => {
-        const { fileTypes, maxLength, action, name, data, withCredentials, baserUrl, onUploadSuccess } = this.props
+        const { fileTypes, maxLength, action, name, data, withCredentials, baserUrl, onUploadSuccess, onUploadError, onFileTypeError, headers, onUploadStart, maxFileSize, onMaxFileSizeError } = this.props
         let { fileList } = this.state
         for (let i = 0; i < files.length; i++) {
             const file = files.item(i)
-            if (file && (isNumber(maxLength) ? fileList.length <= maxLength : true)) {
+            if (file && (isNumber(maxLength) ? fileList.length < maxLength : true)) {
                 if (isArray(fileTypes)) {
-                    if (fileTypes.includes(file.type)) {
+                    if (fileTypes.includes(file.type) || fileTypes.some((i) => file.name.includes(i))) {
+                        if (maxFileSize && file.size >= maxFileSize) {
+                            if (isFunction(onMaxFileSizeError)) {
+                                onMaxFileSizeError()
+                            }
+                        } else {
+                            fileList.push({
+                                file,
+                                preUrl: this.types.includes(file.type) ? window.URL.createObjectURL(file) : '',
+                                info: {
+                                    fileName: file.name,
+                                    type: file.type,
+                                    progress: 0,
+                                    status: 'uploading'
+                                }
+                            })
+                        }
+                    } else {
+                        if (isFunction(onFileTypeError)) {
+                            onFileTypeError()
+                        }
+                    }
+                } else {
+                    if (maxFileSize && file.size >= maxFileSize) {
+                        if (isFunction(onMaxFileSizeError)) {
+                            onMaxFileSizeError()
+                        }
+                    } else {
                         fileList.push({
                             file,
                             preUrl: this.types.includes(file.type) ? window.URL.createObjectURL(file) : '',
                             info: {
+                                fileName: file.name,
+                                type: file.type,
                                 progress: 0,
                                 status: 'uploading'
                             }
                         })
                     }
-                } else {
-                    fileList.push({
-                        file,
-                        preUrl: this.types.includes(file.type) ? window.URL.createObjectURL(file) : '',
-                        info: {
-                            fileName: file.name,
-                            type: file.type,
-                            progress: 0,
-                            status: 'uploading'
-                        }
-                    })
                 }
             }
         }
@@ -205,40 +248,64 @@ export default class Upload extends Component<IUploadProps, IState> {
             }
             const formData = new FormData()
             formData.append(name || 'avatar', i.file)
+            let url = action
             if (isObject(data)) {
+                let params = ''
                 Object.keys(data).map((i) => {
-                    formData.append(i, data[i])
+                    params = i + '=' + data[i] + '&'
                 })
+                url = url + '?' + params
             }
-            if (!i.xhr) {
+            if (!i.xhr && isFunction(onUploadStart) && onUploadStart()) {
                 i.xhr = axios({
                     baseURL: baserUrl,
                     method: 'POST',
-                    url: action,
+                    headers,
+                    url: url,
                     data: formData,
                     withCredentials,
                     onUploadProgress: (progressEvent) => {
                         const complete = (progressEvent.loaded / progressEvent.total * 100 | 0)
                         const { fileList } = this.state
-                        fileList[index].info = {
-                            ...fileList[index].info,
-                            progress: complete,
-                            status: complete === 100 ? 'done' : 'uploading'
-                        }
-                        this.setState({
-                            fileList: [...fileList]
-                        }, async () => {
-                            if (i.xhr && complete === 100) {
-                                const data = await i.xhr
-                                if (isFunction(onUploadSuccess)) {
-                                    onUploadSuccess(i, data.data)
-                                }
+                        if (fileList[index]) {
+                            fileList[index].info = {
+                                ...fileList[index].info,
+                                progress: complete,
+                                status: complete === 100 ? 'done' : 'uploading'
                             }
-                        })
+                            this.setState({
+                                fileList: [...fileList]
+                            })
+                        }
+                    }
+                }).then((response) => {
+                    const { fileList } = this.state
+                    if (response.status === 200) {
+                        if (isFunction(onUploadSuccess)) {
+                            onUploadSuccess(i, response.data, fileList)
+                        }
+                    } else {
+                        if (isFunction(onUploadError)) {
+                            onUploadError(i, response.data, fileList)
+                        }
                     }
                 })
             }
             return i
         })
+    }
+
+    private handleItemClose = (index: number) => {
+        const { onUploadItemClear } = this.props
+        const { fileList } = this.state
+        const data = fileList[index]
+        fileList.splice(index, 1)
+        if (isFunction(onUploadItemClear)) {
+            onUploadItemClear(data, fileList)
+        } else {
+            this.setState({
+                fileList: [...fileList]
+            })
+        }
     }
 }

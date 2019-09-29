@@ -51,7 +51,7 @@ export default class FlatList extends React.Component<IFlatListProps, any> {
         )
     }
 
-    public componentWillReceiveProps() {
+    public UNSAFE_componentWillReceiveProps() {
         this.setState({
             status: true
         })

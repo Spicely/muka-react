@@ -3,6 +3,7 @@ import { getClassName, prefix } from '../utils'
 import { iconType } from '../Icon'
 
 export interface IAlertProps {
+    className?: string
     showIcon?: boolean
     icon?: iconType | JSX.Element
     type?: 'success' | 'info' | 'warning' | 'warning'
@@ -29,9 +30,9 @@ export default class Alert extends Component<IAlertProps, IState> {
     }
 
     public render(): JSX.Element {
-        const { type, message, title, inheritColor, style } = this.props
+        const { type, message, title, inheritColor, style, className } = this.props
         return (
-            <div className={getClassName(`${prefixClass} ${prefix}${prefixClass}_${type}${inheritColor ? ' inherit_color' : ''}`)} style={style}>
+            <div className={getClassName(`${prefixClass} ${prefix}${prefixClass}_${type}${inheritColor ? ' inherit_color' : ''}`, className)} style={style}>
                 {
                     title ? (
                         <div className={getClassName(`${prefixClass}_title`)} style={{ marginBottom: message ? '' : 0 }}>

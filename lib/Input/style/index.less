@@ -44,6 +44,30 @@
 
     &_box {
         position: relative;
+        .transition(0.5s);
+        border: 1 * @unit solid #e8e8e8;
+
+        &.@{prefix}disabled {
+            background: #fff;
+
+            &:hover {
+                border-color: #e8e8e8;
+                cursor: not-allowed;
+            }
+        }
+
+        &:hover {
+            border-color: @theme_color;
+        }
+
+        /* IE浏览器 */
+        &.@{prefix}focus {
+            border-color: @theme_color;
+        }
+
+        &_pre_icon {
+            width: 35 * @unit;
+        }
 
         input {
             padding: 0 10 * @unit;
@@ -53,9 +77,9 @@
             width: 100%;
             position: relative;
             font-size: @input_font_size;
-            border: 1 * @unit solid #e8e8e8;
             transition: all 0.5s;
             -moz-appearance: textfield;
+            border: none;
 
             &::-webkit-inner-spin-button,
             &::-webkit-outer-spin-button {
@@ -83,15 +107,6 @@
                 font-size: @input_font_size;
             }
 
-            /* IE浏览器 */
-            &:focus {
-                border-color: @theme_color;
-            }
-
-            &:hover {
-                border-color: @theme_color  !important;
-            }
-
             &:disabled {
                 background: #fff;
 
@@ -111,8 +126,13 @@
         right: 10 * @unit;
         top: 50%;
         transform: translate(0, -50%);
-        background: rgba(0, 0, 0, 0.2);
+        background: rgba(0, 0, 0, 0.25);
         border-radius: 50%;
+        cursor: pointer;
+
+        &:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
 
         * {
             color: #fff;

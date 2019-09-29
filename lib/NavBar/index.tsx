@@ -10,14 +10,14 @@ export interface INavBarRightIcon {
     url: iconType
     link?: string
     color?: string
-    onClick?: () => boolean
+    onClick?: () => void
 }
 
 export interface INavBarRightImage {
     type: 'image'
     url: string
     link?: string
-    onClick?: () => boolean
+    onClick?: () => void
 }
 
 export interface INavBarProps {
@@ -34,7 +34,7 @@ export interface INavBarProps {
     endVal?: number
     divider?: boolean
     animate?: boolean
-    goBack?: () => void
+    onBack?: () => void
     onRightClick?: () => void
 }
 
@@ -47,7 +47,7 @@ export default class NavBar extends Component<INavBarProps, any> {
     }
 
     public render(): JSX.Element {
-        const { className, left, divider, title, right, fixed, goBack, leftClassName, titleCenter, titleClassName, rightClassName, style, onRightClick, children } = this.props
+        const { className, left, divider, title, right, fixed, leftClassName, titleCenter, titleClassName, rightClassName, style, onRightClick, children } = this.props
         let rightValue: any
         if (isArray(right)) {
             rightValue = right.map((item: INavBarRightIcon | INavBarRightImage, index: number) => {
@@ -77,7 +77,7 @@ export default class NavBar extends Component<INavBarProps, any> {
                 <div className="flex">
                     {
                         !isNull(left) && (
-                            <div className={getClassName(`${prefixClass}_left flex_justify`, leftClassName)} onClick={goBack}>
+                            <div className={getClassName(`${prefixClass}_left flex_justify`, leftClassName)} onClick={this.handleBack}>
                                 {left ? left : <Icon icon="ios-arrow-back" />}
                             </div>
                         )
@@ -115,6 +115,15 @@ export default class NavBar extends Component<INavBarProps, any> {
         }
         if (status && link) {
             Router.push(link)
+        }
+    }
+
+    private handleBack = () => {
+        const { onBack } = this.props
+        if (isFunction(onBack)) {
+            onBack()
+        } else {
+            Router.back()
         }
     }
 }

@@ -64,9 +64,16 @@
     }
 
     &.disabled {
-        border-color: #d9d9d9 !important;
-        color: #d9d9d9 !important;
+        border-color: #dfd8d8;
+        color: rgba(0, 0, 0, 0.25);
+        background: #dfd8d8;
         cursor: no-drop;
+
+        &:hover {
+            border-color: #dfd8d8;
+            color: rgba(0, 0, 0, 0.25);
+            background: #dfd8d8;
+        }
     }
 
     &_loading {

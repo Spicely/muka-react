@@ -108,7 +108,7 @@ export default class ImagePicker extends Component<IImagePickerProps, IState> {
         this.setValue(value, files)
     }
 
-    public componentWillReceiveProps(nextProps: IImagePickerProps) {
+    public UNSAFE_componentWillReceiveProps(nextProps: IImagePickerProps) {
         const { files } = this.state
         this.setValue(nextProps.value, files)
     }

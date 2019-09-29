@@ -1,96 +1,108 @@
-import * as React from 'react'
-import { getClassName } from '../utils'
-import Icon from '../Icon'
+import React, { Component, Fragment } from 'react'
+import { isFunction } from 'muka'
+import { getClassName, IValue } from '../utils'
 
 export interface IEditorProps {
     className?: string
+    onChange?: (value: string) => void
+    value?: string
+    container?: any[]
+    theme?: 'snow' | 'bubble'
+    handlers?: IValue
+    onImageChange?: (imageHandler: (url: string) => void) => void
 }
+const prefixClass = 'editor'
 
-export default class Editor extends React.Component<IEditorProps, any> {
+export default class Editor extends Component<IEditorProps, any> {
+    constructor(props: IEditorProps) {
+        super(props)
+        if (typeof document !== 'undefined') {
+            this.quill = require('react-quill')
+        }
+    }
+
+    public static defaultProps: IEditorProps = {
+        theme: 'snow',
+        handlers: {},
+        container: [
+            [{ 'size': ['small', false, 'large', 'huge'] }],
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote', 'code-block'],
+            [{ 'header': 1 }, { 'header': 2 }],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'script': 'sub' }, { 'script': 'super' }],
+            ['link', 'image'],
+            [{ 'indent': '-1' }, { 'indent': '+1' }],
+            [{ 'direction': 'rtl' }],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'align': [] }],
+            ['clean']
+        ]
+    }
 
     public state = {
-        value: '<p></p>'
+        value: ''
     }
 
-    private status: boolean = false
+    private quillRef: any
+
+    private quill: any
 
     public render(): JSX.Element {
-        const { className } = this.props
+        const { className, handlers, container, theme } = this.props
         const { value } = this.state
-        return (
-            <div className={getClassName('editor', className)}>
-                <div>
-                    <Icon icon="ios-image" />
-                </div>
-                <div className={getClassName('editor_body')}>
-                    <div
-                        className={getClassName('editor_body_container')}
-                        dangerouslySetInnerHTML={{ __html: value }}
-                        contentEditable
-                        onInput={this.handleChange}
-                        onCompositionStart={() => { this.status = true }}
-                        onCompositionEnd={() => { this.status = false }}
-                    />
-                    {/* <textarea className={getClassName('editor_box')} value={value} onChange={this.handleChange} /> */}
-                </div>
-            </div>
-        )
-    }
+        const Quill = this.quill
 
-    private handleChange = (e: React.ChangeEvent<HTMLDivElement>) => {
-        if (this.status) {
-            return
-        }
-        const node = e.target
-        let value = e.target.innerHTML.replace(/<[div>]*>/gm, '<p>')
-        value = value.replace(/<\/[div>]*>/gm, '</p>')
-        const selection = window.getSelection()
-        if (selection) {
-            const range = selection.getRangeAt(0)
-            const textNode = range.startContainer
-            const rangeStartOffset = range.startOffset
-            let nodeNum = 1
-            node.childNodes.forEach((item: Node, index: number) => {
-                if (item === textNode.parentNode || node === textNode.parentNode) {
-                    nodeNum = index + 1
-                }
-            })
-            if (!value || value === '<p></p>') {
-                value = `<p mark="mark$${(Math.random() * 100).toFixed(0)}"></p>`
-            }
-            this.setState(
-                { value },
-                () => {
-                    const dom = (node.childNodes[nodeNum - 1] && node.childNodes[nodeNum - 1].childNodes[0]) || node.childNodes[nodeNum - 1] || node
-                    range.setStart(dom, rangeStartOffset)
-                    selection.addRange(range)
-                }
+        if (Quill) {
+            return (
+                <Quill
+                    ref={(el: Element) => { this.quillRef = el }}
+                    className={getClassName(prefixClass, className)}
+                    value={this.props.value || value}
+                    onChange={this.handleChange}
+                    theme={theme}
+                    modules={{
+                        toolbar: {
+                            container,
+                            handlers: {
+                                ...handlers,
+                                image: this.handleImgUpload
+                            },
+                        }
+                    }}
+                />
             )
+        } else {
+            return <Fragment />
+        }
+
+    }
+
+    private imageHandler = (url: string) => {
+        if (typeof this.quillRef.getEditor !== 'function') return
+        const quill = this.quillRef.getEditor()
+        var range = quill.getSelection()
+        let index = range ? range.index : 0
+        quill.insertEmbed(index, "image", url, this.quill.Quill.sources.USER)
+        quill.setSelection(index + 1)
+    };
+
+    private handleChange = (value: string) => {
+        const { onChange } = this.props
+        if (isFunction(onChange)) {
+            onChange(value)
+        } else {
+            this.setState({
+                value
+            })
         }
     }
 
-    // private getCursortPosition(textDom: HTMLDivElement) {
-    //     let cursorPos = 0
-    //     if (textDom.selectionStart || textDom.selectionStart === '0') {
-    //         // Firefox support
-    //         cursorPos = textDom.selectionStart
-    //     }
-    //     return cursorPos
-    // }
-
-    // private setCaretPosition(textDom: React.ChangeEvent<HTMLDivElement>, pos: number) {
-    //     console.log(textDom.target)
-    //     // if (textDom.setSelectionRange) {
-    //     //     // IE Support
-    //     //     textDom.focus()
-    //     //     textDom.setSelectionRange(pos, pos)
-    //     // } else if (textDom.createTextRange) {
-    //     //     // Firefox support
-    //     //     var range = textDom.createTextRange()
-    //     //     range.collapse(true)
-    //     //     range.moveEnd('character', pos)
-    //     //     range.moveStart('character', pos)
-    //     //     range.select()
-    //     // }
-    // }
+    private handleImgUpload = () => {
+        const { onImageChange } = this.props
+        if (isFunction(onImageChange)) {
+            onImageChange(this.imageHandler)
+        }
+    }
 }

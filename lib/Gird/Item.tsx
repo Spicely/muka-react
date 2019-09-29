@@ -3,7 +3,7 @@ import { omit } from 'muka'
 import Item, { IItemProps } from '../Item'
 import { getClassName } from '../utils'
 
-const prefixClass = 'gird_input'
+const prefixClass = 'gird_item'
 
 export default class GirdItem extends Component<IItemProps, any> {
 

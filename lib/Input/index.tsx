@@ -1,9 +1,8 @@
 import React, { InputHTMLAttributes, Component, ChangeEvent, FocusEvent, CSSProperties } from 'react'
-import { omit, isFunction, isEmpty } from 'muka'
+import { omit, isFunction, isEmpty, isNil } from 'muka'
 import InputSearch from './search'
 import { getClassName, prefix } from '../utils'
 import Icon from '../Icon'
-import { Button } from 'antd';
 export * from './search'
 
 export interface IInputProps extends InputHTMLAttributes<any> {
@@ -14,6 +13,7 @@ export interface IInputProps extends InputHTMLAttributes<any> {
     closeIconShow?: boolean
     disabled?: boolean
     type?: string
+    preIcon?: JSX.Element
     label?: string | JSX.Element
     labelStyle?: CSSProperties
     labelClassName?: string
@@ -25,7 +25,8 @@ export interface IInputProps extends InputHTMLAttributes<any> {
 
 interface IState {
     moveToTop: boolean
-    val: string
+    val: string,
+    focus: boolean
 }
 
 const prefixClass = 'input'
@@ -41,34 +42,43 @@ export default class Input extends Component<IInputProps, IState> {
 
     public state = {
         moveToTop: false,
-        val: ''
+        val: '',
+        focus: false
     }
 
     public render(): JSX.Element {
-        const { className, placeholder, placeAnimate, value, closeIconShow, disabled, label, labelClassName, labelStyle, showMaxLength, maxLength, extend, extendClassName, extendStyle } = this.props
-        const { moveToTop, val } = this.state
-        const otherProps = omit(this.props, ['className', 'placeholder', 'placeAnimate', 'onFocus', 'onBlur', 'onClose', 'value', 'closeIconShow', 'labelStyle', 'label', 'labelClassName', 'showMaxLength', 'extend', 'extendStyle', 'extendClassName'])
+        const { className, placeholder, placeAnimate, value, closeIconShow, disabled, label, labelClassName, labelStyle, showMaxLength, maxLength, extend, extendClassName, extendStyle, preIcon, style } = this.props
+        const { moveToTop, val, focus } = this.state
+        const otherProps = omit(this.props, ['className', 'placeholder', 'placeAnimate', 'onFocus', 'onBlur', 'preIcon', 'onClose', 'value', 'closeIconShow', 'labelStyle', 'label', 'labelClassName', 'showMaxLength', 'extend', 'extendStyle', 'extendClassName', 'style'])
         return (
-            <div className={getClassName(`input flex${placeAnimate ? ' active' : ''}`, className)}>
+            <div className={getClassName(`input flex${placeAnimate ? ' active' : ''}`, className)} style={style}>
                 {label ? <div className={getClassName(`${prefixClass}__label flex_justify ${labelClassName}`)} style={labelStyle}>{label}</div> : null}
                 {placeAnimate && <div className={getClassName(`${prefixClass}_text flex_justify`, moveToTop ? 'active' : '')}>{placeholder}</div>}
-                <div className={getClassName(`${prefixClass}_box flex_1`)}>
+                <div className={getClassName(`${prefixClass}_box flex flex_1 ${focus ? prefix + 'focus' : ''}`, disabled ? prefix + 'disabled' : '')}>
+                    {
+                        preIcon ? (
+                            <div className={getClassName(`${prefixClass}_box_pre_icon flex_center`)}>
+                                {preIcon}
+                            </div>
+                        ) : null
+                    }
                     <input
-                        className={getClassName(`${prefixClass}_value`)}
+                        className={getClassName(`${prefixClass}_value flex_1`)}
                         placeholder={placeAnimate ? '' : placeholder}
                         onFocus={this.handleFocus}
                         onBlur={this.handleBlur}
-                        value={value || val}
+                        value={isNil(value) ? val : value}
                         onChange={this.handleChange}
                         {...otherProps}
                         style={{
-                            paddingRight: (closeIconShow && showMaxLength) ? 63 : (closeIconShow || showMaxLength) ? 24 : ''
+                            paddingRight: (closeIconShow && showMaxLength) ? 63 : (closeIconShow || showMaxLength) ? 24 : '',
+                            paddingLeft: preIcon ? 0 : ''
                         }}
                     />
                     {(showMaxLength && maxLength) ? <div className={getClassName(`${prefixClass}_max_length flex_justify`)} style={{
-                        right: (closeIconShow && (value || val).toString().length) ? 26 : 5
+                        right: closeIconShow  ? 26 : 5
                     }}>{val.length || (value || '').toString().length}/{maxLength}</div> : null}
-                    {(value || val) && closeIconShow && !disabled && <Icon className={getClassName(`${prefixClass}_close_icon`)} onClick={this.handleClose} icon="ios-close" fontSize="16px" style={{ right: 5 }} />}
+                    {(isNil(value) ? val : true) && closeIconShow && !disabled && <Icon className={getClassName(`${prefixClass}_close_icon`)} onClick={this.handleClose} icon="ios-close" fontSize="12px" style={{ right: 5 }} />}
                 </div>
                 {extend && <div className={getClassName(`${prefixClass}_extend flex_justify`, extendClassName)} style={{ ...extendStyle, margin: 0 }}>{extend}</div>}
             </div>
@@ -82,6 +92,9 @@ export default class Input extends Component<IInputProps, IState> {
                 moveToTop: true
             })
         }
+        this.setState({
+            focus: true
+        })
         if (isFunction(onFocus)) {
             onFocus(event)
         }
@@ -94,6 +107,9 @@ export default class Input extends Component<IInputProps, IState> {
                 moveToTop: false
             })
         }
+        this.setState({
+            focus: false
+        })
         if (isFunction(onBlur)) {
             onBlur(event)
         }

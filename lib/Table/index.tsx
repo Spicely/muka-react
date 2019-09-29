@@ -9,7 +9,7 @@ export interface ITableColumns {
     dataIndex?: string
     key?: string
     width?: string | number
-    render?: (value?: any, row?: any, index?: any) => JSX.Element
+    render?: (value?: any, row?: any, index?: any) => (JSX.Element | JSX.Element[] | string)
 }
 
 export interface ITableProps extends TableProps<any> {
@@ -23,7 +23,7 @@ export default class Table extends Component<ITableProps, any> {
 
     public static defaultProps = {
         columns: [],
-        data: []
+        dataSource: []
     }
 
     public render(): JSX.Element {

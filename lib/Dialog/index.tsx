@@ -15,8 +15,10 @@ export interface IDialogProps {
     animateOutClass?: string
     footer?: JSX.Element | null
     onClose?: (val: boolean) => void
-    onOk?: () => void
+    onOk?: () => Promise<void> | void
     onFirstShow?: () => void
+    pos?: 'center' | 'bottom'
+    async?: boolean
 }
 
 interface IState {
@@ -32,7 +34,8 @@ export default class Dialog extends Component<IDialogProps, IState> {
 
     public static defaultProps: IDialogProps = {
         animateInClass: 'slipUp',
-        animateOutClass: 'slipBottom'
+        animateOutClass: 'slipBottom',
+        pos: 'center'
     }
 
     constructor(props: IDialogProps) {
@@ -76,7 +79,7 @@ export default class Dialog extends Component<IDialogProps, IState> {
 
     private status: boolean = false
 
-    public componentWillReceiveProps(nextProps: IDialogProps) {
+    public UNSAFE_componentWillReceiveProps(nextProps: IDialogProps) {
         const { visible } = this.state
         if (visible !== nextProps.visible) {
             const obj: any = {
@@ -87,33 +90,27 @@ export default class Dialog extends Component<IDialogProps, IState> {
                 obj.visible = nextProps.visible
                 this.status = true
             }
-            this.setState(obj, () => {
-                if (this.animateNode) {
-                    this.animateNode.removeEventListener('animationend', this.handelAnimate, false)
-                }
-                if (this.animateNode) {
-                    this.animateNode.addEventListener('animationend', this.handelAnimate, false)
-                }
-            })
+            this.setState(obj)
         }
     }
 
     public componentWillUnmount() {
-        if (this.animateNode) {
-            this.animateNode.removeEventListener('animationend', this.handelAnimate, false)
-        }
         if (this.timer) {
             clearTimeout(this.timer)
         }
     }
 
     public render(): JSX.Element {
-        const { className, title, children, footer, animateInClass, animateOutClass, style } = this.props
+        const { className, title, children, footer, animateInClass, animateOutClass, style, pos, onOk, async } = this.props
         const { visible, animate } = this.state
         if (this.node && this.status) {
             return createPortal(
-                <div className={getClassName(`${prefixClass} flex_center ${animate ? 'fadeIn' : 'fadeOut'}`)} style={{ display: visible ? '' : 'none' }}>
-                    <div className={getClassName(`${prefixClass}_content flex_column ${animate ? animateInClass : animateOutClass}`, className)} ref={(e) => this.animateNode = e} style={style}>
+                <div className={getClassName(`${prefixClass} flex_${pos} ${animate ? 'fadeIn' : 'fadeOut'}`)} style={{ display: visible ? '' : 'none' }}>
+                    <div
+                        className={getClassName(`${prefixClass}_content flex_column ${animate ? animateInClass : animateOutClass}`, className)}
+                        style={style}
+                        onAnimationEnd={this.handelAnimate}
+                    >
                         <NavBar
                             left={
                                 <div className="navbar_label">{title}</div>
@@ -135,7 +132,7 @@ export default class Dialog extends Component<IDialogProps, IState> {
                                             (
                                                 <Fragment>
                                                     <Button onClick={this.handleClose} style={{ marginRight: '10px' }}>取消</Button>
-                                                    <Button mold="primary" onClick={this.handelOk}>确定</Button>
+                                                    <Button mold="primary" async={async} onClick={onOk}>确定</Button>
                                                 </Fragment>
                                             ) : footer
                                     }
@@ -169,24 +166,12 @@ export default class Dialog extends Component<IDialogProps, IState> {
 
     private handleClose = () => {
         const { onClose } = this.props
-        this.setState({
-            animate: false
-        }, () => {
-            if (isFunction(onClose)) {
-                onClose(false)
-            }
-        })
-
-    }
-
-    private handelOk = () => {
-        const { onOk } = this.props
-        this.setState({
-            animate: false
-        }, () => {
-            if (isFunction(onOk)) {
-                onOk()
-            }
-        })
+        if (isFunction(onClose)) {
+            onClose(false)
+        } else {
+            this.setState({
+                animate: false
+            })
+        }
     }
 }

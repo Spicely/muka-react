@@ -1,4 +1,4 @@
-import React, { Component, ChangeEvent } from 'react'
+import React, { Component, ChangeEvent, MouseEvent } from 'react'
 import { omit, isUndefined, isString, isBool, isFunction } from 'muka'
 import Input, { IInputProps } from './index'
 import { getClassName } from '../utils'
@@ -8,7 +8,8 @@ import Icon from '../Icon'
 export interface IInputSearchProps extends IInputProps {
     className?: string
     enterButton?: boolean | string
-    onSearch?: (value: string, event: ChangeEvent<HTMLButtonElement>) => void
+    inputDisabled?: boolean
+    onSearch?: (value: string, event: MouseEvent<HTMLButtonElement>) => void
 }
 
 interface IState {
@@ -28,10 +29,10 @@ export default class InputSearch extends Component<IInputSearchProps, IState> {
     }
 
     public render(): JSX.Element {
-        const { className } = this.props
-        const props = omit(this.props, ['className', 'extend', 'enterButton', 'onChange'])
+        const { className, disabled, inputDisabled } = this.props
+        const props = omit(this.props, ['className', 'extend', 'enterButton', 'inputDisabled', 'onChange', 'onSearch'])
         return (
-            <Input {...props} className={getClassName(`${prefixClass}`, className)} onChange={this.handleInputChange} extend={this.getExtendNode()} />
+            <Input {...props} disabled={isBool(inputDisabled) ? inputDisabled : disabled} className={getClassName(`${prefixClass}`, className)} onChange={this.handleInputChange} extend={this.getExtendNode()} />
         )
     }
 
@@ -42,7 +43,7 @@ export default class InputSearch extends Component<IInputSearchProps, IState> {
         }
         if (isUndefined(enterButton) || isString(enterButton)) {
             return (
-                <Button disabled={disabled} onChange={this.handleSearchChange} className={getClassName(`${prefixClass}_btn`)} mold="primary">
+                <Button disabled={disabled} onClick={this.handleSearchChange} className={getClassName(`${prefixClass}_btn`)} mold="primary">
                     {isString(enterButton) ? enterButton : <Icon icon="md-search" color="#fff" />}
                 </Button>
             )
@@ -60,7 +61,7 @@ export default class InputSearch extends Component<IInputSearchProps, IState> {
         }
     }
 
-    private handleSearchChange = (event: ChangeEvent<HTMLButtonElement>) => {
+    private handleSearchChange = (event: MouseEvent<HTMLButtonElement>) => {
         const { onSearch } = this.props
         const { value } = this.state
         if (isFunction(onSearch)) {

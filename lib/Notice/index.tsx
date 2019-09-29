@@ -192,7 +192,7 @@ export default class Notice extends Component<INoticeProps, IState> {
         }
     }
 
-    public componentWillReceiveProps(nextProps: INoticeProps) {
+    public UNSAFE_componentWillReceiveProps(nextProps: INoticeProps) {
         const { value, effect, mode, loop } = this.props
         if (value.length !== nextProps.value.length) {
             clearInterval(this.timer)

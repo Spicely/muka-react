@@ -138,7 +138,7 @@ export default class TabBar extends Component<ITabBarProps, IState> {
         )
     }
 
-    public componentWillReceiveProps(nextProps: ITabBarProps) {
+    public UNSAFE_componentWillReceiveProps(nextProps: ITabBarProps) {
         const { selectIndex } = this.state
         if (!isNil(nextProps.selected) && nextProps.selected !== selectIndex) {
             this.setState({
