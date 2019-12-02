@@ -63,7 +63,7 @@ export default class Select extends Component<ISelectProps, IState> {
                 isMulti={isMulti}
                 isDisabled={isDisabled}
                 components={{
-                    IndicatorsContainer: () => <div className={getClassName(`${prefixClass}_icon flex_center`)} ><Icon icon="ios-arrow-down" fontSize="14px" /></div>,
+                    IndicatorsContainer: () => <div className={getClassName(`${prefixClass}_icon flex_center`)} ><Icon icon="ios-arrow-down" /></div>,
                     NoOptionsMessage: this.handleMessage
                 }}
             />

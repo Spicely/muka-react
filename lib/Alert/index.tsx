@@ -1,5 +1,7 @@
 import React, { Component, CSSProperties } from 'react'
-import { getClassName, prefix } from '../utils'
+import { getClassName, prefix, IStyledProps } from '../utils'
+import { Consumer } from '../ThemeProvider'
+import styled from 'styled-components'
 import { iconType } from '../Icon'
 
 export interface IAlertProps {
@@ -17,8 +19,37 @@ export interface IAlertProps {
 interface IState {
 
 }
+// .type_color(@color) {
+//     border: 1 * @unit solid rgb(@color, 0.4);
+//     background: rgb(@color, 0.2);
 
-const prefixClass = 'alert'
+//     &.inherit_color {
+//         color: @color;
+//     }
+// }
+
+// &_info {
+//     .type_color(@theme_info_color);
+// }
+
+// &_success {
+//     .type_color(@theme_success_color);
+// }
+
+// &_warning {
+//     .type_color(@theme_warning_color);
+// }
+
+// &_error {
+//     .type_color(@theme_error_color);
+// }
+
+const Div = styled.div<IStyledProps>`
+    padding: ${({ theme }) => 15 * theme.ratio + theme.unit};
+`
+const DivChiren = styled.div<IStyledProps>`
+    margin-bottom: ${({ theme }) => 6 * theme.ratio + theme.unit};
+`
 
 export default class Alert extends Component<IAlertProps, IState> {
 
@@ -32,18 +63,31 @@ export default class Alert extends Component<IAlertProps, IState> {
     public render(): JSX.Element {
         const { type, message, title, inheritColor, style, className } = this.props
         return (
-            <div className={getClassName(`${prefixClass} ${prefix}${prefixClass}_${type}${inheritColor ? ' inherit_color' : ''}`, className)} style={style}>
+            <Consumer>
                 {
-                    title ? (
-                        <div className={getClassName(`${prefixClass}_title`)} style={{ marginBottom: message ? '' : 0 }}>
-                            {title}
-                        </div>
-                    ) : null
+                    (value) => (
+                        <Div
+                            className={`${prefix} ${type}${inheritColor ? ' inherit_color' : ''} ${className || ''}`}
+                            style={style}
+                            theme={value.theme}
+                        >
+                            {
+                                title ? (
+                                    <DivChiren
+                                        style={{ marginBottom: message ? '' : 0 }}
+                                        theme={value.theme}
+                                    >
+                                        {title}
+                                    </DivChiren>
+                                ) : null
+                            }
+                            <div>
+                                {message}
+                            </div>
+                        </Div>
+                    )
                 }
-                <div className={getClassName(`${prefixClass}_msg`)}>
-                    {message}
-                </div>
-            </div>
+            </Consumer>
         )
     }
 }

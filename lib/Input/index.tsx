@@ -1,9 +1,10 @@
 import React, { InputHTMLAttributes, Component, ChangeEvent, FocusEvent, CSSProperties } from 'react'
-import { omit, isFunction, isEmpty, isNil } from 'muka'
+import styled, { css } from 'styled-components'
+import { omit, isFunction, isEmpty, isNil } from 'lodash'
 import InputSearch from './search'
-import { getClassName, prefix } from '../utils'
+import { getClassName, prefix, IStyledProps, transition, InputThemeData, ThemeData, Color } from '../utils'
+import { Consumer } from '../ThemeProvider'
 import Icon from '../Icon'
-export * from './search'
 
 export interface IInputProps extends InputHTMLAttributes<any> {
     className?: string
@@ -21,6 +22,7 @@ export interface IInputProps extends InputHTMLAttributes<any> {
     extend?: string | JSX.Element
     extendClassName?: string
     extendStyle?: CSSProperties
+    theme?: InputThemeData
 }
 
 interface IState {
@@ -30,6 +32,109 @@ interface IState {
 }
 
 const prefixClass = 'input'
+
+interface IStyleProps extends IStyledProps {
+    inputTheme: InputThemeData
+}
+
+const Int = styled.input<IStyledProps>`
+    padding: 0 ${({ theme }) => 10 * theme.ratio + theme.unit};
+    outline: none;
+    height: 100%;
+    background: inherit;
+    width: 100%;
+    position: relative;
+    font-size: ${({ theme }) => theme.inputTheme.fontSize * theme.ratio + theme.unit};
+    ${transition(0.5)};
+    -moz-appearance: textfield;
+    border: none;
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        appearance: none;
+        margin: 0;
+    }
+
+    &::-webkit-input-placeholder {
+        font-size: ${({ theme }) => theme.inputTheme.fontSize * theme.ratio + theme.unit};
+    }
+
+    &:-moz-placeholder {
+        font-size: ${({ theme }) => theme.inputTheme.fontSize * theme.ratio + theme.unit};
+    }
+
+    &::-moz-placeholder {
+        font-size: ${({ theme }) => theme.inputTheme.fontSize * theme.ratio + theme.unit};
+    }
+
+    &:-ms-input-placeholder {
+        font-size: ${({ theme }) => theme.inputTheme.fontSize * theme.ratio + theme.unit};
+    }
+
+    &:disabled {
+        background: ${({ theme }) => theme.inputTheme.inputColor};
+
+        &:hover {
+            border-color: ${({ theme }) => theme.primarySwatch};
+            cursor: not-allowed;
+        }
+    }
+`
+
+interface IInitProps {
+    inputTheme: InputThemeData
+}
+
+const IntBox = styled.div<IInitProps>`
+    height: ${({ inputTheme }) => inputTheme.height * ThemeData.ratio + ThemeData.unit};
+    font-size: ${({ inputTheme }) => inputTheme.fontSize * ThemeData.ratio + ThemeData.unit};
+    position: relative;
+    ${transition(0.5)};
+    overflow: hidden;
+    background: ${({ inputTheme }) => inputTheme.inputColor.toString()};
+`
+
+interface IIntViewProps extends IStyleProps {
+    inputTheme: InputThemeData
+    focus: boolean
+}
+
+const IntView = styled.div<IIntViewProps>`
+    position: relative;
+    ${transition(0.5)};
+    border: ${({ inputTheme }) => inputTheme.border.toString()};
+
+    ${({ focus, inputTheme, theme }) => {
+        if (focus) return css`border-color: ${inputTheme.hoverColor || theme.primarySwatch};`
+    }}
+
+    &:hover {
+        border-color: ${({ theme, inputTheme }) => inputTheme.hoverColor || theme.primarySwatch};
+    }
+`
+
+const PreIcon = styled.div`
+    width: ${() => 35 * ThemeData.ratio + ThemeData.unit};
+`
+
+const IntLabel = styled.div`
+     width: ${() => 60 * ThemeData.ratio + ThemeData.unit};
+`
+const CloseIcon = styled(Icon)`
+    ${transition(0.5)};
+    position: absolute;
+    right: ${() => 5 * ThemeData.ratio + ThemeData.unit};
+    top: 50%;
+    transform: translate(0, -50%);
+    background: ${({ theme }) => Color.setOpacity(theme.color, 0.25).toString()};
+    border-radius: 50%;
+    cursor: pointer;
+
+    &:hover {
+        background: ${({ theme }) => Color.setOpacity(theme.color, 0.5).toString()};
+    }
+`
 
 export default class Input extends Component<IInputProps, IState> {
 
@@ -47,41 +152,68 @@ export default class Input extends Component<IInputProps, IState> {
     }
 
     public render(): JSX.Element {
-        const { className, placeholder, placeAnimate, value, closeIconShow, disabled, label, labelClassName, labelStyle, showMaxLength, maxLength, extend, extendClassName, extendStyle, preIcon, style } = this.props
+        const { className, placeholder, placeAnimate, value, closeIconShow, disabled, label, labelClassName, labelStyle, showMaxLength, maxLength, extend, extendClassName, extendStyle, preIcon, style, theme } = this.props
         const { moveToTop, val, focus } = this.state
         const otherProps = omit(this.props, ['className', 'placeholder', 'placeAnimate', 'onFocus', 'onBlur', 'preIcon', 'onClose', 'value', 'closeIconShow', 'labelStyle', 'label', 'labelClassName', 'showMaxLength', 'extend', 'extendStyle', 'extendClassName', 'style'])
         return (
-            <div className={getClassName(`input flex${placeAnimate ? ' active' : ''}`, className)} style={style}>
-                {label ? <div className={getClassName(`${prefixClass}__label flex_justify ${labelClassName}`)} style={labelStyle}>{label}</div> : null}
-                {placeAnimate && <div className={getClassName(`${prefixClass}_text flex_justify`, moveToTop ? 'active' : '')}>{placeholder}</div>}
-                <div className={getClassName(`${prefixClass}_box flex flex_1 ${focus ? prefix + 'focus' : ''}`, disabled ? prefix + 'disabled' : '')}>
-                    {
-                        preIcon ? (
-                            <div className={getClassName(`${prefixClass}_box_pre_icon flex_center`)}>
-                                {preIcon}
-                            </div>
-                        ) : null
-                    }
-                    <input
-                        className={getClassName(`${prefixClass}_value flex_1`)}
-                        placeholder={placeAnimate ? '' : placeholder}
-                        onFocus={this.handleFocus}
-                        onBlur={this.handleBlur}
-                        value={isNil(value) ? val : value}
-                        onChange={this.handleChange}
-                        {...otherProps}
-                        style={{
-                            paddingRight: (closeIconShow && showMaxLength) ? 63 : (closeIconShow || showMaxLength) ? 24 : '',
-                            paddingLeft: preIcon ? 0 : ''
-                        }}
-                    />
-                    {(showMaxLength && maxLength) ? <div className={getClassName(`${prefixClass}_max_length flex_justify`)} style={{
-                        right: closeIconShow  ? 26 : 5
-                    }}>{val.length || (value || '').toString().length}/{maxLength}</div> : null}
-                    {(isNil(value) ? val : true) && closeIconShow && !disabled && <Icon className={getClassName(`${prefixClass}_close_icon`)} onClick={this.handleClose} icon="ios-close" fontSize="12px" style={{ right: 5 }} />}
-                </div>
-                {extend && <div className={getClassName(`${prefixClass}_extend flex_justify`, extendClassName)} style={{ ...extendStyle, margin: 0 }}>{extend}</div>}
-            </div>
+            <Consumer>
+                {(data) => (
+                    <IntBox
+                        className={`flex ${className || ''} ${placeAnimate ? ' active' : ''}`}
+                        style={style}
+                        inputTheme={theme || data.theme.inputTheme}
+                    >
+                        {label ? (
+                            <IntLabel
+                                className={`flex_justify ${labelClassName || ''}`}
+                                style={labelStyle}>
+                                {label}
+                            </IntLabel>
+                        ) : null}
+                        {placeAnimate && <div className={getClassName(`${prefixClass}_text flex_justify`, moveToTop ? 'active' : '')}>{placeholder}</div>}
+                        <IntView
+                            className={`flex flex_1 ${disabled ? prefix + 'disabled' : ''}`}
+                            theme={data.theme}
+                            focus={focus}
+                            inputTheme={theme || data.theme.inputTheme}
+                        >
+                            {
+                                preIcon ? (
+                                    <PreIcon className="flex_center">
+                                        {preIcon}
+                                    </PreIcon>
+                                ) : null
+                            }
+                            <Int
+                                {...otherProps}
+                                className="flex_1"
+                                theme={data.theme}
+                                placeholder={placeAnimate ? '' : placeholder}
+                                onFocus={this.handleFocus}
+                                onBlur={this.handleBlur}
+                                value={isNil(value) ? val : value}
+                                onChange={this.handleChange}
+                                style={{
+                                    paddingRight: (closeIconShow && showMaxLength) ? 63 : (closeIconShow || showMaxLength) ? 24 : '',
+                                    paddingLeft: preIcon ? 0 : ''
+                                }}
+                            />
+                            {(showMaxLength && maxLength) ? <div className={getClassName(`${prefixClass}_max_length flex_justify`)} style={{
+                                right: closeIconShow ? 26 : 5
+                            }}>{val.length || (value || '').toString().length}/{maxLength}</div> : null}
+                            {(isNil(value) ? val : true) && closeIconShow && !disabled && (
+                                <CloseIcon
+                                    onClick={this.handleClose}
+                                    icon="ios-close"
+                                    theme={theme ? theme.iconCloseTheme : data.theme.inputTheme.iconCloseTheme}
+                                />
+                            )}
+                        </IntView>
+                        {extend && <div className={getClassName(`${prefixClass}_extend flex_justify`, extendClassName)} style={{ ...extendStyle, margin: 0 }}>{extend}</div>}
+                    </IntBox>
+                )}
+            </Consumer>
+
         )
     }
 
@@ -118,7 +250,7 @@ export default class Input extends Component<IInputProps, IState> {
     private handleChange = (event: ChangeEvent<HTMLInputElement>) => {
         const { onChange, value } = this.props
         const val = event.target.value
-        if (isFunction(onChange) && value) {
+        if (isFunction(onChange)) {
             onChange(event)
         } else {
             this.setState({

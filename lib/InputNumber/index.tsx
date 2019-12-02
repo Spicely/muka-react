@@ -1,8 +1,8 @@
 import * as React from 'react'
-import { getClassName, prefix } from '../utils'
+import { isFunction, isNumber } from 'lodash'
+import { getClassName, prefix, IconThemeData } from '../utils'
 import Button from '../Button'
 import Icon, { iconType } from '../Icon'
-import { isFunction, isNumber } from 'muka'
 
 export interface IInputNumberProps {
     className?: string
@@ -34,9 +34,9 @@ export default class InputNumber extends React.Component<IInputNumberProps, any>
         const { val } = this.state
         return (
             <div className={getClassName(`${prefixClass}${border ? ' ' + prefix + 'border' : ''} flex`, className)} >
-                <Button className={getClassName(`${prefixClass}_btn`)} onClick={this.handleReduce}><Icon icon={removeIcon} fontSize="12px" /></Button>
+                <Button className={getClassName(`${prefixClass}_btn`)} onClick={this.handleReduce}><Icon icon={removeIcon} theme={new IconThemeData({size: 12})} /></Button>
                 <input type="number" onChange={this.handleChange} value={isNumber(value) ? value : val} />
-                <Button className={getClassName(`${prefixClass}_btn`)} onClick={this.handlePlus}><Icon icon={addIcon} fontSize="12px" /></Button>
+                <Button className={getClassName(`${prefixClass}_btn`)} onClick={this.handlePlus}><Icon icon={addIcon} theme={new IconThemeData({size: 12})} /></Button>
             </div>
         )
     }

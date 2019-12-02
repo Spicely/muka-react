@@ -58,7 +58,8 @@ export default class Pagination extends Component<IPaginationProps, IState> {
                     disabled={(current === 1 || disabled) ? true : false}
                     onClick={this.handleChange.bind(this, current - 1)}
                 >
-                    <Icon icon="ios-arrow-back" fontSize="18px" color={current === 1 ? '#d9d9d9' : 'rgba(0, 0, 0, 0.65)'} />
+                    {/* fontSize="18px" color={current === 1 ? '#d9d9d9' : 'rgba(0, 0, 0, 0.65)'}  */}
+                    <Icon icon="ios-arrow-back" />
                 </Button>
                 {
                     Array.from(new Array(num)).map((i: any, index: number) => {
@@ -104,7 +105,8 @@ export default class Pagination extends Component<IPaginationProps, IState> {
                                             disabled={disabled}
                                             key={index}
                                         >
-                                            <Icon icon="ios-more" fontSize="18px" color="rgba(0, 0, 0, 0.65)" />
+                                            {/* fontSize="18px" color="rgba(0, 0, 0, 0.65)" */}
+                                            <Icon icon="ios-more" />
                                         </Button>
                                     )
                                 }
@@ -127,7 +129,8 @@ export default class Pagination extends Component<IPaginationProps, IState> {
                                             disabled={disabled}
                                             key={index}
                                         >
-                                            <Icon icon="ios-more" fontSize="18px" color="rgba(0, 0, 0, 0.65)" />
+                                            {/* fontSize="18px" color="rgba(0, 0, 0, 0.65)"  */}
+                                            <Icon icon="ios-more" />
                                         </Button>
                                     )
                                 }
@@ -140,7 +143,8 @@ export default class Pagination extends Component<IPaginationProps, IState> {
                                                 disabled={disabled}
                                                 key={index}
                                             >
-                                                <Icon icon="ios-more" fontSize="18px" color="rgba(0, 0, 0, 0.65)" />
+                                                {/* fontSize="18px" color="rgba(0, 0, 0, 0.65)"  */}
+                                                <Icon icon="ios-more" />
                                             </Button>
                                         )
                                     }
@@ -176,7 +180,8 @@ export default class Pagination extends Component<IPaginationProps, IState> {
                                             disabled={disabled}
                                             key={index}
                                         >
-                                            <Icon icon="ios-more" fontSize="18px" color="rgba(0, 0, 0, 0.65)" />
+                                            {/* fontSize="18px" color="rgba(0, 0, 0, 0.65)"  */}
+                                            <Icon icon="ios-more" />
                                         </Button>
                                     )
                                 }
@@ -213,7 +218,8 @@ export default class Pagination extends Component<IPaginationProps, IState> {
                     disabled={(current === num || disabled) ? true : false}
                     onClick={this.handleChange.bind(this, current + 1)}
                 >
-                    <Icon icon="ios-arrow-forward" fontSize="18px" color={(current === num || disabled) ? '#d9d9d9' : 'rgba(0, 0, 0, 0.65)'} />
+                    {/* fontSize="18px" color={(current === num || disabled) ? '#d9d9d9' : 'rgba(0, 0, 0, 0.65)'} */}
+                    <Icon icon="ios-arrow-forward" />
                 </Button>
             </div>
         )

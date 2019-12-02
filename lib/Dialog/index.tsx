@@ -1,7 +1,9 @@
 import React, { Component, Fragment, CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
-import { isFunction, isNull, isUndefined } from 'muka'
-import { getClassName, prefix } from '../utils'
+import styled, { keyframes } from 'styled-components'
+import { isFunction, isNull, isUndefined } from 'lodash'
+import { Consumer } from '../ThemeProvider'
+import { getClassName, prefix, IStyledProps } from '../utils'
 import Button from '../Button'
 import NavBar from '../NavBar'
 import Icon from '../Icon'
@@ -30,6 +32,89 @@ const prefixClass = 'dialog'
 
 let globalNode: Element | null
 
+const fadeIn = keyframes`
+    from {
+        background: rgba(0, 0, 0, 0);
+    }
+
+    to {
+        background: rgba(0, 0, 0, 0.5);
+    }
+`
+
+const fadeOut = keyframes`
+    from {
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+    to {
+        background: rgba(0, 0, 0, 0);
+    }
+`
+
+const slipToUp = keyframes`
+    from {
+        transform: translate3d(0, 100vh, 0);
+    }
+
+    to {
+        transform: translate3d(0, 0vh, 0);
+    }
+`
+
+const slipToBottom = keyframes`
+    from {
+        transform: translate3d(0, 0vh, 0);
+    }
+
+    to {
+        transform: translate3d(0, 100vh, 0);
+    }
+`
+
+interface IStylePorps extends IStyledProps {
+    animate: boolean
+}
+
+const Div = styled.div<IStylePorps>`
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 9;
+    overflow: hidden;
+    animation: ${({ animate }) => animate ? fadeIn : fadeOut} 0.3s forwards;
+`
+
+const DialogContent = styled.div<IStyledProps>`
+    min-width: ${({ theme }) => 600 * theme.ratio + theme.unit};
+    max-height:  ${({ theme }) => `calc(100% - ${100 * theme.ratio + theme.unit})`} ;
+    background: #fff;
+    border-radius: ${({ theme }) => theme.borderRadius};
+    overflow: hidden;
+    box-shadow: 0 0 ${({ theme }) => 10 * theme.ratio + theme.unit} rgb(107, 107, 107);
+
+    &.slipUp {
+        transform: translate3d(0, 100vh, 0);
+        animation: ${slipToUp} 0.5s 0.2s forwards cubic-bezier(0.3, 0.23, 0.22, 1.04);
+    }
+
+    &.slipBottom {
+        animation: ${slipToBottom} 0.5s forwards;
+    }
+`
+
+const DialogBox = styled.div<IStyledProps>`
+    min-height: ${({ theme }) => 300 * theme.ratio + theme.unit};
+    position: relative;
+    margin: 0 ${({ theme }) => 20 * theme.ratio + theme.unit};
+    overflow: auto;
+`
+
+const NavTitle = styled.div<IStyledProps>`
+    font-size: ${({ theme }) => 14 * theme.ratio + theme.unit};
+`
 export default class Dialog extends Component<IDialogProps, IState> {
 
     public static defaultProps: IDialogProps = {
@@ -105,42 +190,56 @@ export default class Dialog extends Component<IDialogProps, IState> {
         const { visible, animate } = this.state
         if (this.node && this.status) {
             return createPortal(
-                <div className={getClassName(`${prefixClass} flex_${pos} ${animate ? 'fadeIn' : 'fadeOut'}`)} style={{ display: visible ? '' : 'none' }}>
-                    <div
-                        className={getClassName(`${prefixClass}_content flex_column ${animate ? animateInClass : animateOutClass}`, className)}
-                        style={style}
-                        onAnimationEnd={this.handelAnimate}
-                    >
-                        <NavBar
-                            left={
-                                <div className="navbar_label">{title}</div>
-                            }
-                            className={getClassName(`${prefixClass}_content__navbar`)}
-                            right={<Icon icon="ios-close" style={{ cursor: 'pointer' }} onClick={this.handleClose} />}
-                        />
-                        <div className={getClassName(`${prefixClass}_content__box flex_1`)}>
-                            {children}
-                        </div>
-                        <NavBar
-                            className={getClassName(`${prefixClass}_content__navbar ${prefix}divider_top`)}
-                            divider={false}
-                            left=" "
-                            right={
-                                <div className="flex">
-                                    {
-                                        isNull(footer) ? null : isUndefined(footer) ?
-                                            (
-                                                <Fragment>
-                                                    <Button onClick={this.handleClose} style={{ marginRight: '10px' }}>取消</Button>
-                                                    <Button mold="primary" async={async} onClick={onOk}>确定</Button>
-                                                </Fragment>
-                                            ) : footer
-                                    }
-                                </div>
-                            }
-                        />
-                    </div>
-                </div>,
+                <Consumer>
+                    {
+                        (value) => (
+                            <Div
+                                className={`flex_${pos}`} style={{ display: visible ? '' : 'none' }}
+                                animate={animate}
+                            >
+                                <DialogContent
+                                    className={`${animate ? animateInClass : animateOutClass} ${className || ''}`}
+                                    style={style}
+                                    theme={value.theme}
+                                    onAnimationEnd={this.handelAnimate}
+                                >
+                                    <NavBar
+                                        left={
+                                            <NavTitle>{title}</NavTitle>
+                                        }
+                                        backgroundColor={value.theme.dialogColor}
+                                        right={<Icon icon="ios-close" style={{ cursor: 'pointer' }} onClick={this.handleClose} />}
+                                    />
+                                    <DialogBox
+                                        theme={value.theme}
+                                        className="flex_1"
+                                    >
+                                        {children}
+                                    </DialogBox>
+                                    <NavBar
+                                        className="mk_divider_top"
+                                        divider={false}
+                                        left={null}
+                                        backgroundColor={value.theme.dialogColor}
+                                        right={
+                                            <div className="flex">
+                                                {
+                                                    isNull(footer) ? null : isUndefined(footer) ?
+                                                        (
+                                                            <Fragment>
+                                                                <Button onClick={this.handleClose} style={{ marginRight: '10px' }}>取消</Button>
+                                                                <Button mold="primary" async={async} onClick={onOk}>确定</Button>
+                                                            </Fragment>
+                                                        ) : footer
+                                                }
+                                            </div>
+                                        }
+                                    />
+                                </DialogContent>
+                            </Div>
+                        )
+                    }
+                </Consumer>,
                 this.node
             )
         }

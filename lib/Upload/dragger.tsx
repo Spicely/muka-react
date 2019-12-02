@@ -91,7 +91,7 @@ export default class Upload extends Component<IUploadProps, IState> {
                                         children ? children : (
                                             <div className={getClassName(`${prefixClass}__box_default`)}>
                                                 <div className={getClassName(`${prefixClass}__box_default__icon`)}>
-                                                    {isString(iconProps) ? <Icon icon={iconProps || undefined} fontSize="40px" color={iconColorProps} /> : iconProps}
+                                                    {isString(iconProps) ? <Icon icon={iconProps || undefined}  /> : iconProps}
                                                 </div>
                                                 <div className={getClassName(`${prefixClass}__box_default__title`)}>
                                                     {titleProps}
@@ -125,7 +125,7 @@ export default class Upload extends Component<IUploadProps, IState> {
                                                             <Progress percent={i.info.progress} text={`${i.info.progress}%`} />
                                                         </div>
                                                         <div className={getClassName(`${prefixClass}_upload__view__item__close`)}>
-                                                            <Icon icon="ios-close" color="#fff" fontSize="16px" onClick={this.handleItemClose.bind(this, index)} />
+                                                            <Icon icon="ios-close" onClick={this.handleItemClose.bind(this, index)} />
                                                         </div>
                                                     </div>
                                                 )

@@ -129,7 +129,7 @@ export default class ImagePicker extends Component<IImagePickerProps, IState> {
                                     <Image className={getClassName(`${prefixClass}__add_box_img`)} src={i.url} />
                                 </div>
                                 {
-                                    !disabled && <Icon icon="md-close-circle" className={getClassName(`${prefixClass}__add_close`)} fontSize="16px" onClick={this.handleFileRemove.bind(this, index)} />
+                                    !disabled && <Icon icon="md-close-circle" className={getClassName(`${prefixClass}__add_close`)} onClick={this.handleFileRemove.bind(this, index)} />
                                 }
                             </div>
                         )
@@ -172,7 +172,7 @@ export default class ImagePicker extends Component<IImagePickerProps, IState> {
             return (
                 <div className={getClassName(`${prefixClass}__add `)} onClick={this.handleClick}>
                     <div className={getClassName(`${prefixClass}__add_box flex_center`)}>
-                        {isString(icon) ? <Icon icon={icon} fontSize={iconStyle && iconStyle.fontSize} color={iconStyle && iconStyle.color} /> : icon}
+                        {isString(icon) ? <Icon icon={icon} /> : icon}
                     </div>
                 </div>
             )

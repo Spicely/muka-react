@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
-import { omit } from 'muka'
+import styled from 'styled-components'
+import { omit } from 'lodash'
 import { getClassName } from '../utils'
 import Menu, { IMenuProps } from '../Menu'
 import { iconType } from '../Icon'
@@ -40,8 +41,24 @@ export interface ILayoutProps {
     logoView?: JSX.Element
     pageNav?: JSX.Element
     menuOptions: ILayoutMenuOptions
+    baseUrl?: string
     menuChange?: (val: string | number) => void
 }
+
+const LayoutDiv = styled.div`
+    height: 100vh;
+`
+
+const LayoutNav = styled.div`
+    position: relative;
+    z-index: 9;
+`
+
+const LayoutView = styled.div`
+    padding: 0;
+    overflow: auto;
+    background: #f5f7f9;
+`
 
 export default class Layout extends Component<ILayoutProps, any> {
     public static defaultProps = {
@@ -54,39 +71,39 @@ export default class Layout extends Component<ILayoutProps, any> {
         const { children, menuOptions, logoView, pageNav, menuChange } = this.props
         const options = omit(menuOptions, ['items', 'className'])
         return (
-            <div className={getClassName('layout flex')}>
-                <div className={getClassName('layout_nav')}>
-                    <div className={getClassName('layout_logo')}>
+            <LayoutDiv className="flex">
+                <div className="flex_column">
+                    <div>
                         {logoView}
                     </div>
                     <Menu
                         {...options}
-                        className={getClassName('layout_nav_menu flex_1', menuOptions.className)}
+                        className={`flex_1 ${menuOptions.className || ''}`}
                         onChange={menuChange}
                     >
                         {this.getMenuView()}
                     </Menu>
                 </div>
-                <div className={getClassName('layout_page flex_1')}>
-                    <div className={getClassName('layout_page_nav')}>
+                <div className="flex_column flex_1">
+                    <LayoutNav>
                         {pageNav}
-                    </div>
-                    <div className={getClassName('layout_page_view flex_1')}>
+                    </LayoutNav>
+                    <LayoutView className="flex_1">
                         {children}
-                    </div>
+                    </LayoutView>
                 </div>
-            </div>
+            </LayoutDiv>
         )
     }
 
     private getMenuView(): JSX.Element[] {
-        const { menuOptions } = this.props
+        const { menuOptions, baseUrl } = this.props
         return menuOptions.items.map((item: ILayoutMenuOptionsItem, index: number): JSX.Element => {
             let icon: any = ''
             if (item.icon && item.icon.type === 'icon') {
                 icon = item.icon.name
             } else if (item.icon && item.icon.type === 'image') {
-                icon = <Image src={item.icon.name} />
+                icon = <Image className={getClassName('layout_img__icon')} src={(baseUrl || '') + item.icon.name} />
             }
             if (item.groupTitle) {
                 return (
@@ -104,7 +121,7 @@ export default class Layout extends Component<ILayoutProps, any> {
                                 if (i.icon && i.icon.type === 'icon') {
                                     icon = i.icon.name
                                 } else if (i.icon && i.icon.type === 'image') {
-                                    icon = <Image src={i.icon.name} />
+                                    icon = <Image className={getClassName('layout_img__icon')} src={(baseUrl || '') + i.icon.name} />
                                 }
                                 return (
                                     <Menu.Item
@@ -129,7 +146,7 @@ export default class Layout extends Component<ILayoutProps, any> {
                 if (item.item.icon && item.item.icon.type === 'icon') {
                     icon = item.item.icon.name
                 } else if (item.item.icon && item.item.icon.type === 'image') {
-                    icon = <Image src={item.item.icon.name} />
+                    icon = <Image className={getClassName('layout_img__icon')} src={(baseUrl || '') + item.item.icon.name} />
                 }
                 return (
                     <Menu.Item

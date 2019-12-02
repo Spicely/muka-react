@@ -1,6 +1,5 @@
 import React, { Component, CSSProperties } from 'react'
 import { isNumber, isFunction } from 'muka'
-import hexRgb from 'hex-rgb'
 import Image from '../Image'
 import { getClassName, prefix } from '../utils'
 
@@ -75,8 +74,7 @@ export default class Carousel extends Component<ICarouselProps, IState> {
         const cssStyle: CSSProperties = {}
         const dotStyle: CSSProperties = {}
         if (dotColor) {
-            const color = hexRgb(dotColor)
-            dotStyle.background = `rgba(${color.red}, ${color.green}, ${color.blue}, 0.6)`
+            dotStyle.background = dotColor
         }
         if (effect === 'scrollx') {
             cssStyle.transform = `translate3d(-${selectIndex * left}px, 0, 0)`

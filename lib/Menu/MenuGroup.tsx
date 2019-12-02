@@ -1,10 +1,13 @@
 import React, { Component, Fragment } from 'react'
-import { isString } from 'muka'
+import { isString } from 'lodash'
 import { Tooltip } from 'antd'
+import { Consumer as ThemeConsumer } from '../ThemeProvider'
+import styled, { css } from 'styled-components'
 import { MenuItem } from './MenuItem'
 import { Consumer, IProvider } from './index'
 import { getClassName } from '../utils'
 import Icon, { iconType } from '../Icon'
+import Color from '../utils/Color'
 
 export interface IMenuGroup {
     className?: string
@@ -14,6 +17,27 @@ export interface IMenuGroup {
     iconHighlight?: string
     iconInitColor?: string
 }
+
+const Group = styled.div`
+    min-height: ${({ theme }) => theme.menuGroupHeight * theme.ratio + theme.unit};
+    line-height: ${({ theme }) => theme.menuGroupHeight * theme.ratio + theme.unit};
+    color: ${({ theme }) => Color.setOpacity(theme.fontColor, 0.7).toString()};
+    position: relative;
+    cursor: pointer;
+`
+
+const GroupBox = styled.li`
+ min-height: ${({ theme }) => theme.menuGroupHeight * theme.ratio + theme.unit};
+`
+
+
+const GroupIcon = styled.div`
+   padding: ${({ theme }) => 6 * theme.ratio + theme.unit};
+`
+
+const GroupLabel = styled.div`
+    white-space: nowrap;
+`
 
 export class MenuGroup extends Component<IMenuGroup, any> {
     public static defaultProps = {
@@ -33,76 +57,82 @@ export class MenuGroup extends Component<IMenuGroup, any> {
         const { children, className, title, icon, field, iconHighlight, iconInitColor } = this.props
         const { visible } = this.state
         return (
-            <Consumer>
+            <ThemeConsumer>
                 {
-                    (val: IProvider) => {
-                        const node = React.Children.map(children, (item: any, index: number) => {
-                            if (item.type === MenuItem) {
-                                const fieldProps = item.props.field
-                                if (fieldProps === val.field && this.status) {
-                                    this.selected = true
-                                }
-                                return React.cloneElement(item, { field: fieldProps ? fieldProps : `${field}-${index}` })
-                            }
-                            return item
-                        })
-                        const nodeView = (child: JSX.Element) => {
-                            if (val.collapsed) {
-                                return (
-                                    <Tooltip title={title} placement="right">
-                                        {child}
-                                    </Tooltip>
-                                )
-                            } else {
-                                return (
-                                    <Fragment>
-                                        {child}
-                                    </Fragment>
-                                )
-                            }
-                        }
-                        const jsxNode = (
-                            <li className={getClassName('menu_group', className)}>
-                                <ul className={getClassName('menu_group_title', className)}>
-                                    <li className={getClassName('menu_group_box flex')} onClick={this.handleShowBox}>
-                                        <div className={getClassName('menu_group_title__icon flex_justify')}>
-                                            {
-                                                (!val.collapsed && React.Children.count(children) && val.arrowIconPos === 'left') ?
-                                                    (
-                                                        <div className="flex_justify" style={{ transform: (this.selected || visible) ? 'rotate(0deg)' : 'rotate(-90deg)', transition: '0.5s all' }}>
-                                                            <Icon icon={val.arrowIcon} color={val.arrowIconColor} fontSize="0.8rem" />
-                                                        </div>
-                                                    ) : null
+                    (value) => (
+                        <Consumer>
+                            {
+                                (val: IProvider) => {
+                                    const node = React.Children.map(children, (item: any, index: number) => {
+                                        if (item.type === MenuItem) {
+                                            const fieldProps = item.props.field
+                                            if (fieldProps === val.field && this.status) {
+                                                this.selected = true
                                             }
-                                            {(isString(icon) && val.arrowIconPos === 'right') ? <Icon icon={icon} color={val.field === field ? iconHighlight : iconInitColor} /> : icon}
-                                        </div>
-                                        {!val.collapsed ? <div className={getClassName('menu_group_title__label flex_1')}>{title}</div> : null}
-                                        {
-                                            (!val.collapsed && React.Children.count(children) && val.arrowIconPos === 'right') ?
-                                                (
-                                                    <div className="flex_justify" style={{ transform: (this.selected || visible) ? 'rotate(0deg)' : 'rotate(-90deg)', transition: '0.5s all' }}>
-                                                        <Icon icon={val.arrowIcon} color={val.arrowIconColor} fontSize="0.8rem" />
-                                                    </div>
-                                                ) : null
+                                            return React.cloneElement(item, { field: fieldProps ? fieldProps : `${field}-${index}` })
                                         }
-                                    </li>
-                                    {
-                                        !val.collapsed ? (
-                                            <li className={getClassName('menu_group_content flex_1', (this.selected || visible) ? 'active' : '')}>
-                                                <ul>
-                                                    {node}
-                                                </ul>
-                                            </li>
-                                        ) : null
+                                        return item
+                                    })
+                                    const nodeView = (child: JSX.Element) => {
+                                        if (val.collapsed) {
+                                            return (
+                                                <Tooltip title={title} placement="right">
+                                                    {child}
+                                                </Tooltip>
+                                            )
+                                        } else {
+                                            return (
+                                                <Fragment>
+                                                    {child}
+                                                </Fragment>
+                                            )
+                                        }
                                     }
+                                    const jsxNode = (
+                                        <Group className={className} theme={value.theme}>
+                                            <ul className={getClassName('menu_group_title', className)}>
+                                                <GroupBox className="flex" onClick={this.handleShowBox}>
+                                                    <GroupIcon className="flex_justify">
+                                                        {
+                                                            (!val.collapsed && React.Children.count(children) && val.arrowIconPos === 'left') ?
+                                                                (
+                                                                    <div className="flex_justify" style={{ transform: (this.selected || visible) ? 'rotate(0deg)' : 'rotate(-90deg)', transition: '0.5s all' }}>
+                                                                        <Icon icon={val.arrowIcon} />
+                                                                    </div>
+                                                                ) : null
+                                                        }
+                                                        {(isString(icon) && val.arrowIconPos === 'right') ? <Icon icon={icon} color={val.field === field ? iconHighlight : iconInitColor} /> : icon}
+                                                    </GroupIcon>
+                                                    {!val.collapsed ? <GroupLabel className="flex_1">{title}</GroupLabel> : null}
+                                                    {
+                                                        (!val.collapsed && React.Children.count(children) && val.arrowIconPos === 'right') ?
+                                                            (
+                                                                <div className="flex_justify" style={{ transform: (this.selected || visible) ? 'rotate(0deg)' : 'rotate(-90deg)', transition: '0.5s all' }}>
+                                                                    <Icon icon={val.arrowIcon} />
+                                                                </div>
+                                                            ) : null
+                                                    }
+                                                </GroupBox>
+                                                {
+                                                    !val.collapsed ? (
+                                                        <li className={getClassName('menu_group_content flex_1', (this.selected || visible) ? 'active' : '')}>
+                                                            <ul>
+                                                                {node}
+                                                            </ul>
+                                                        </li>
+                                                    ) : null
+                                                }
 
-                                </ul>
-                            </li>
-                        )
-                        return nodeView(jsxNode)
-                    }
+                                            </ul>
+                                        </Group>
+                                    )
+                                    return nodeView(jsxNode)
+                                }
+                            }
+                        </Consumer>
+                    )
                 }
-            </Consumer>
+            </ThemeConsumer>
         )
     }
 

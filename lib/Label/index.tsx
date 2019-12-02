@@ -1,6 +1,8 @@
 import React, { Component, CSSProperties, MouseEvent } from 'react'
-import { getClassName } from '../utils'
-import { omit } from 'muka'
+import styled from 'styled-components'
+import { omit } from 'lodash'
+import { Consumer } from '../ThemeProvider'
+import { IStyledProps } from '../utils'
 
 export interface ILabelProps {
     onClick?: (event: MouseEvent<HTMLSpanElement>) => void
@@ -8,6 +10,11 @@ export interface ILabelProps {
     color?: string
     style?: CSSProperties
 }
+
+const Span = styled.span<IStyledProps>`
+    padding: ${({ theme }) => `${4 * theme.ratio + theme.unit} ${8 * theme.ratio + theme.unit}`};
+    cursor: pointer;
+`
 
 export default class Label extends Component<ILabelProps, any> {
 
@@ -23,13 +30,21 @@ export default class Label extends Component<ILabelProps, any> {
         }
         const props = omit(this.props, ['style', 'color', 'className'])
         return (
-            <span
-                {...props}
-                style={cssStyle}
-                className={getClassName('label', className)}
-            >
-                {children}
-            </span>
+            <Consumer>
+                {
+                    (value) => (
+                        <Span
+                            {...props}
+                            style={cssStyle}
+                            className={className}
+                            theme={value.theme}
+                        >
+                            {children}
+                        </Span>
+                    )
+                }
+            </Consumer>
+
         )
     }
 }

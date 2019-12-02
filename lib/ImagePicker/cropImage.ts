@@ -35,7 +35,7 @@ export default async function getCroppedImg(imageSrc: string, pixelCrop: ICroppe
     }
 
     // As Base64 string
-    return canvas.toDataURL('image/jpeg')
+    return canvas.toDataURL('image/png')
 
     // As a blob
     // return new Promise((resolve) => {

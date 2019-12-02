@@ -61,7 +61,7 @@ export default class InputSearch extends Component<IInputSearchProps, IState> {
         }
     }
 
-    private handleSearchChange = (event: ChangeEvent<HTMLElement>) => {
+    private handleSearchChange = (event: any) => {
         const { onSearch } = this.props
         const { value } = this.state
         if (isFunction(onSearch)) {

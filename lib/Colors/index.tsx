@@ -3,7 +3,6 @@ import { SketchPicker, ChromePicker, BlockPicker, GithubPicker, TwitterPicker, H
 import { isFunction } from 'muka'
 import Mask from './mask'
 import { getClassName } from '../utils'
-export { ColorResult } from 'react-color'
 
 export type colorsType = 'sketch' | 'chrome' | 'block' | 'github' | 'twitter' | 'hue' | 'alpha' | 'circle' | 'slider' | 'compact' | 'material' | 'swatches'
 
@@ -135,7 +134,7 @@ export default class Colors extends Component<IColorsProps, IState> {
     private handleChange = (color: ColorResult, event: ChangeEvent) => {
         const { onChange } = this.props
         this.setState({
-            color: color.hex
+            color: `rgba(${color.rgb.r},${color.rgb.g},${color.rgb.b},${color.rgb.a})`
         })
         if (isFunction(onChange)) {
             onChange(color, event)

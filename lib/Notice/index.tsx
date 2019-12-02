@@ -113,7 +113,7 @@ export default class Notice extends Component<INoticeProps, IState> {
                 {
                     icon && (
                         <div className="flex_justify" style={{ marginRight: '5px' }}>
-                            <Icon icon={icon} fontSize="18px" color={iconColor} />
+                            <Icon icon={icon} />
                         </div>
                     )
                 }

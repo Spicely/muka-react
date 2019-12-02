@@ -24,7 +24,7 @@ export interface ILUpload extends UploadProps {
 export default class LUpload extends Component<ILUpload, any> {
     public static defaultProps: ILUpload = {
         listType: 'picture-card',
-        fileTypes: ['image/jpeg', 'image/png'],
+        fileTypes: ['image/jpeg', 'image/jpg', 'image/png'],
         name: 'avatar',
         baseUrl: '',
         fileList: []

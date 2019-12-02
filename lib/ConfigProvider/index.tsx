@@ -21,8 +21,9 @@ const defaultValue: IConfigProviderProps = {
         image: defaultUrl,
         center: true,
     },
+    
     uploadDraggerProps: {
-        icon: 'file_box',
+        icon: 'file-box',
         iconColor: '#0693e3',
         title: '单击或拖动文件到此区域进行上传',
         label: '支持单个或批量上传'

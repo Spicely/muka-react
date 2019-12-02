@@ -1,6 +1,7 @@
 import React, { Component, CSSProperties } from 'react'
-import { getClassName } from '../utils'
 import { isEqual } from 'lodash'
+import { RadioThemeData, ThemeData } from '../utils'
+import { Consumer } from '../ThemeProvider'
 import { iconType } from '../Icon'
 import Radio from '../Radio'
 
@@ -9,7 +10,6 @@ interface ICheckBoxOptionsProps {
     value: string | number | boolean
     className?: string
     icon?: iconType
-    iconColor?: string
 }
 
 type typeItem = string | number | boolean
@@ -19,15 +19,14 @@ export interface ICheckBoxProps {
     style?: CSSProperties
     options: ICheckBoxOptionsProps[]
     icon?: iconType
-    iconColor?: string
     value?: typeItem[]
+    theme?: RadioThemeData
 }
 
 interface IState {
     value: typeItem[]
 }
 
-const prefixClass = 'check_box'
 
 export default class CheckBox extends Component<ICheckBoxProps, IState> {
 
@@ -54,28 +53,39 @@ export default class CheckBox extends Component<ICheckBoxProps, IState> {
     }
 
     public render(): JSX.Element {
-        const { className, style, options, icon, iconColor } = this.props
+        const { className, style, options, icon, theme } = this.props
         const { value } = this.state
         return (
-            <div className={getClassName(`${prefixClass}`, className)} style={style}>
+            <Consumer>
                 {
-                    options.map((item, index) => {
-                        return (
-                            <Radio
-                                className={getClassName(`${prefixClass}__radio`, item.className)}
-                                checked={value.includes(item.value) ? true : false}
-                                type="square"
-                                key={index}
-                                icon={item.icon || icon}
-                                iconColor={item.iconColor || iconColor}
-                                onChange={this.handleChange.bind(this, item.value)}
-                            >
-                                {item.label}
-                            </Radio>
-                        )
-                    })
+                    (data) => (
+                        <div
+                            className={className}
+                            style={style}
+                        >
+                            {
+                                options.map((item, index) => {
+                                    return (
+                                        <Radio
+                                            className={item.className}
+                                            checked={value.includes(item.value) ? true : false}
+                                            type="square"
+                                            key={index}
+                                            theme={theme || data.theme.radioTheme}
+                                            icon={item.icon || icon}
+                                            onChange={this.handleChange.bind(this, item.value)}
+                                            style={{marginRight: `${10 * ThemeData.ratio + ThemeData.unit}`}}
+                                        >
+                                            {item.label}
+                                        </Radio>
+                                    )
+                                })
+                            }
+                        </div>
+                    )
                 }
-            </div>
+            </Consumer>
+
         )
     }
 
