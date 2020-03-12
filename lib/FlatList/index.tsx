@@ -1,6 +1,12 @@
 import * as React from 'react'
-import { isFunction } from 'muka'
+import { isFunction } from 'lodash'
 import { getClassName } from '../utils'
+import styled from 'styled-components'
+
+const FlatView = styled.div`
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+`
 
 export interface IFlatListProps {
     className?: string
@@ -37,17 +43,15 @@ export default class FlatList extends React.Component<IFlatListProps, any> {
             styles.height = height
         }
         return (
-            <div
-                className={getClassName('flat_list', className)}
+            <FlatView
+                className={className}
                 style={style || styles}
             >
-                <div
-                    className={getClassName('flat_list_controller')}
-                >
+                <div>
                     {this.getHeader()}
                 </div>
                 {this.getChildren()}
-            </div>
+            </FlatView>
         )
     }
 

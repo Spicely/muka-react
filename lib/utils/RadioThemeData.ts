@@ -1,6 +1,7 @@
-import { BorderStyle } from './Border'
-import { isNumber } from 'lodash'
+import Border, { BorderStyle } from './Border'
+import { isNil } from 'lodash'
 import Color from './Color'
+import IconThemeData from './IconThemeData'
 
 interface IBorder {
     width: number
@@ -15,6 +16,8 @@ interface IRadioThemeDataProps {
     color?: Color
     fontSize?: number
     border?: IBorder
+    iconTheme?: IconThemeData
+    hoverBorderColor?: Color
 }
 
 export default class RadioThemeData {
@@ -23,9 +26,11 @@ export default class RadioThemeData {
         if (data) {
             if (data.radioColor) this.radioColor = data.radioColor
             if (data.color) this.color = data.color
-            if (isNumber(data.size)) this.size = data.size
-            if (isNumber(data.fontSize)) this.fontSize = data.fontSize
+            if (!isNil(data.size)) this.size = data.size
+            if (!isNil(data.fontSize)) this.fontSize = data.fontSize
             if (data.border) this.border = data.border
+            if (data.iconTheme) this.iconTheme = data.iconTheme
+            if (data.hoverBorderColor) this.hoverBorderColor = data.hoverBorderColor
         }
     }
 
@@ -37,9 +42,16 @@ export default class RadioThemeData {
 
     public fontSize: number = 12
 
-    public border: IBorder = {
+    public iconTheme: IconThemeData = new IconThemeData({
+        color: Color.fromRGB(255, 255, 255),
+        size: 18
+    })
+
+    public hoverBorderColor?: Color
+
+    public border: Border = Border.all({
         width: 1,
         style: BorderStyle.solid,
         color: Color.fromRGB(180, 180, 180)
-    }
+    })
 }

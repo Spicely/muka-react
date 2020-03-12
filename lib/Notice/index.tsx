@@ -1,9 +1,9 @@
 import React, { Component, CSSProperties } from 'react'
-import Router from 'next/router'
-import { getClassName, prefix } from '../utils'
+import styled, { css } from 'styled-components'
+import { Consumer } from '../ThemeProvider'
+import { getClassName, prefix, NoticeThemeData, getUnit, Color } from '../utils'
 import Icon, { iconType } from '../Icon'
 import Image from '../Image'
-
 interface INoticeValueProps {
     title?: string | JSX.Element
     label: string | JSX.Element
@@ -22,9 +22,10 @@ export interface INoticeProps {
     titleColor?: string
     loop?: boolean
     timingFunction?: string
-    effect?: 'scrollx' | 'scrolly'
+    effect?: 'scrollX' | 'scrollY'
     mode?: 'roll' | 'switch'
     value: INoticeValueProps[]
+    theme?: NoticeThemeData
 }
 
 // tslint:disable-next-line: no-empty-interface
@@ -37,13 +38,74 @@ interface IState {
 
 const prefixClass = 'notice'
 
+interface IStyleNotice {
+    noticeTheme: NoticeThemeData
+}
+
+const NoticeView = styled.div<IStyleNotice>`
+    background: ${({ noticeTheme }) => noticeTheme.noticerColor.toString()};
+    ${({ noticeTheme }) => noticeTheme.padding.toString()};
+    width: 100%;
+    height: ${({ noticeTheme }) => getUnit(noticeTheme.height)};
+    overflow: hidden;
+`
+
+const NoticeLogo = styled.div<IStyleNotice>`
+    height: ${({ noticeTheme }) => getUnit(noticeTheme.logoHeight)};
+    width: ${({ noticeTheme }) => getUnit(noticeTheme.logoWidth)};
+    padding-right: ${getUnit(10)};
+    margin-right: ${getUnit(5)};
+`
+
+const NoiticeImg = styled(Image)`
+    width: auto;
+    height: 100%;
+`
+
+const NoticeBox = styled.div`
+    overflow: hidden;
+`
+
+const NoticeBoxItem = styled.div`
+    width: 100%;
+    height: 100%;
+    flex-shrink: 0;
+`
+
+const NoticeBoxTitle = styled.div<IStyleNotice>`
+    color: ${({ noticeTheme }) => Color.setOpacity(noticeTheme.color, 0.8).toString()};;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+`
+
+interface IStyleLabel extends IStyleNotice {
+    hide: boolean
+}
+
+const NoticeBoxLabel = styled.div<IStyleLabel>`
+    color: ${({ noticeTheme }) => noticeTheme.color.toString()};
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    ${({ hide }) => {
+        if (hide) {
+            return css`
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                display: block;
+            `
+        }
+    }}
+`
+
 export default class Notice extends Component<INoticeProps, IState> {
 
     public static defaultProps: INoticeProps = {
         value: [],
         loop: true,
         mode: 'roll',
-        effect: 'scrollx',
+        effect: 'scrollX',
         speed: 2,
         timingFunction: 'linear'
     }
@@ -71,114 +133,137 @@ export default class Notice extends Component<INoticeProps, IState> {
     private itemNode: Element | null = null
 
     public render(): JSX.Element {
-        const { className, logo, value, style, icon, iconColor, labelColor, effect, titleColor, loop, speed, timingFunction, mode } = this.props
+        const { className, logo, value, style, icon, labelColor, effect, titleColor, loop, speed, timingFunction, mode, theme, iconColor } = this.props
         const { selectIndex, animate, valueAnimate, valueIndex } = this.state
         const itemStyle: CSSProperties = {}
         const loopStyle: CSSProperties = {}
-        if (effect === 'scrollx' && mode === 'roll') {
+        if (effect === 'scrollX' && mode === 'roll') {
             itemStyle.transform = `translate3d(${-valueIndex * this.viewInfo.left}px, 0, 0)`
             itemStyle.transition = `all ${valueAnimate ? speed : 0}s ${timingFunction}`
-        } else if (effect === 'scrolly' && mode === 'roll') {
+        } else if (effect === 'scrollY' && mode === 'roll') {
             itemStyle.transform = `translate3d(0, ${-valueIndex * this.viewInfo.top}px, 0)`
             itemStyle.transition = `all ${valueAnimate ? speed : 0}s ${timingFunction}`
-        } else if (effect === 'scrollx' && mode === 'switch') {
+        } else if (effect === 'scrollX' && mode === 'switch') {
             itemStyle.transform = `translate3d(${-valueIndex * this.viewInfo.left}px, 0, 0)`
             itemStyle.transition = `all ${valueAnimate ? '0.5' : 0}s ${timingFunction}`
-        } else if (effect === 'scrolly' && mode === 'switch') {
+        } else if (effect === 'scrollY' && mode === 'switch') {
             itemStyle.transform = `translate3d(0, ${-valueIndex * this.viewInfo.top}px, 0)`
             itemStyle.transition = `all ${valueAnimate ? '0.5' : 0}s ${timingFunction}`
         }
-        if (effect === 'scrollx' && mode === 'roll') {
+        if (effect === 'scrollX' && mode === 'roll') {
             loopStyle.transform = `translate3d(${-selectIndex * this.viewInfo.left}px, 0, 0)`
             loopStyle.transition = `all ${animate ? speed : 0}s ${timingFunction}`
-        } else if (effect === 'scrolly' && mode === 'roll') {
+        } else if (effect === 'scrollY' && mode === 'roll') {
             loopStyle.transform = `translate3d(0, ${-selectIndex * this.viewInfo.top}px, 0)`
             loopStyle.transition = `all ${animate ? speed : 0}s ${timingFunction}`
-        } else if (effect === 'scrollx' && mode === 'switch') {
+        } else if (effect === 'scrollX' && mode === 'switch') {
             loopStyle.transform = `translate3d(${-selectIndex * this.viewInfo.left}px, 0, 0)`
             loopStyle.transition = `all ${animate ? '0.5' : 0}s ${timingFunction}`
-        } else if (effect === 'scrolly' && mode === 'switch') {
+        } else if (effect === 'scrollY' && mode === 'switch') {
             loopStyle.transform = `translate3d(0, ${-selectIndex * this.viewInfo.top}px, 0)`
             loopStyle.transition = `all ${animate ? '0.5' : 0}s ${timingFunction}`
         }
         return (
-            <div className={getClassName(`${prefixClass} flex`, className)} style={style}>
-                {logo && (
-                    <div className="flex_justify">
-                        <div className={getClassName(`${prefixClass}_logo ${prefix}divider_right `)}>
-                            <Image className={getClassName(`${prefixClass}_logo__img`)} src={logo} />
-                        </div>
-                    </div>
-                )}
+            <Consumer>
                 {
-                    icon && (
-                        <div className="flex_justify" style={{ marginRight: '5px' }}>
-                            <Icon icon={icon} />
-                        </div>
+                    (init) => (
+                        <NoticeView
+                            noticeTheme={theme || init.theme.noticeTheme}
+                            className={getClassName('flex', className)}
+                            style={style}
+                        >
+                            {logo && (
+                                <div className="flex_justify">
+                                    <NoticeLogo
+                                        noticeTheme={theme || init.theme.noticeTheme}
+                                        className={getClassName(`${prefix}divider_right `)}
+                                    >
+                                        <NoiticeImg src={logo} />
+                                    </NoticeLogo>
+                                </div>
+                            )}
+                            {
+                                icon && (
+                                    <div className="flex_justify" style={{ marginRight: '5px' }}>
+                                        <Icon icon={icon} color={iconColor}/>
+                                    </div>
+                                )
+                            }
+                            <NoticeBox
+                                className={getClassName(`flex_1`, effect === 'scrollX' ? 'flex' : '')}
+                                ref={(e) => this.animateNode = e}
+                            >
+                                {
+                                    value.map((item, index: number) => (
+                                        <NoticeBoxItem
+                                            key={index}
+                                            style={{
+                                                ...itemStyle,
+                                                visibility: (index === 0 && this.status && value.length !== 1) ? 'hidden' : 'initial'
+                                            }}
+                                            ref={(e) => this.itemNode = e}
+                                            onClick={this.handleToView.bind(this, item.link)}
+                                        >
+                                            {item.title && (
+                                                <NoticeBoxTitle
+                                                    noticeTheme={theme || init.theme.noticeTheme}
+                                                    style={{ color: titleColor }}
+                                                >
+                                                    {item.title}
+                                                </NoticeBoxTitle>
+                                            )}
+                                            <NoticeBoxLabel
+                                                className="flex_justify"
+                                                noticeTheme={theme || init.theme.noticeTheme}
+                                                hide={!!item.title}
+                                                style={{
+                                                    color: labelColor,
+                                                    height: item.title ? '' : '100%',
+                                                    WebkitLineClamp: item.title ? 2 : 1,
+                                                    display: item.title ? '' : 'flex'
+                                                }}
+                                            >
+                                                {item.label}
+                                            </NoticeBoxLabel>
+                                        </NoticeBoxItem>
+                                    ))
+                                }
+                                {
+                                    loop && value.length > 0 && (
+                                        <NoticeBoxItem
+                                            key={'index'}
+                                            style={loopStyle}
+                                            onClick={this.handleToView.bind(this, value[0].link)}
+                                        >
+                                            {value[0].title && (
+                                                <NoticeBoxTitle
+                                                    noticeTheme={theme || init.theme.noticeTheme}
+                                                    style={{ color: titleColor }}
+                                                >
+                                                    {value[0].title}
+                                                </NoticeBoxTitle>
+                                            )}
+                                            <NoticeBoxLabel
+                                                className="flex_justify"
+                                                noticeTheme={theme || init.theme.noticeTheme}
+                                                hide={!!value[0].title}
+                                                style={{
+                                                    color: labelColor,
+                                                    height: value[0].title ? '' : '100%',
+                                                    WebkitLineClamp: value[0].title ? 2 : 1,
+                                                    display: value[0].title ? '' : 'flex'
+                                                }}
+                                            >
+                                                {value[0].label}
+                                            </NoticeBoxLabel>
+                                        </NoticeBoxItem>
+                                    )
+                                }
+                            </NoticeBox>
+                        </NoticeView>
                     )
                 }
-                <div className={getClassName(`${prefixClass}_view flex_1`, effect === 'scrollx' ? 'flex' : '')} ref={(e) => this.animateNode = e}>
-                    {
-                        value.map((item, index: number) => (
-                            <div
-                                className={getClassName(`${prefixClass}_view__item`)}
-                                key={index}
-                                style={{
-                                    ...itemStyle,
-                                    visibility: (index === 0 && this.status && value.length !== 1) ? 'hidden' : 'initial'
-                                }}
-                                ref={(e) => this.itemNode = e}
-                                onClick={this.handleToView.bind(this, item.link)}
-                            >
-                                {item.title && (
-                                    <div className={getClassName(`${prefixClass}_view_title`)} style={{ color: titleColor }}>
-                                        {item.title}
-                                    </div>
-                                )}
-                                <div
-                                    className={getClassName(`${prefixClass}_view_label  ${item.title ? prefix + 'text__hide' : ''} flex_justify`)}
-                                    style={{
-                                        color: labelColor,
-                                        height: item.title ? '' : '100%',
-                                        WebkitLineClamp: item.title ? 2 : 1,
-                                        display: item.title ? '' : 'flex'
-                                    }}
-                                >
-                                    {item.label}
-                                </div>
-                            </div>
-                        ))
-                    }
-                    {
-                        loop && value.length > 0 && (
-                            <div
-                                className={getClassName(`${prefixClass}_view__item`)}
-                                key={'index'}
-                                style={loopStyle}
-                                onClick={this.handleToView.bind(this, value[0].link)}
-                            >
-                                {value[0].title && (
-                                    <div className={getClassName(`${prefixClass}_view_title`)} style={{ color: titleColor }}>
-                                        {value[0].title}
-                                    </div>
-                                )}
-                                <div
-                                    className={getClassName(`${prefixClass}_view_label  ${value[0].title ? prefix + 'text__hide' : ''} flex_justify`)}
-                                    style={{
-                                        color: labelColor,
-                                        height: value[0].title ? '' : '100%',
-                                        WebkitLineClamp: value[0].title ? 2 : 1,
-                                        display: value[0].title ? '' : 'flex'
-                                    }}
-                                >
-                                    {value[0].label}
-                                </div>
-                            </div>
-                        )
-                    }
-                </div>
-
-            </div>
+            </Consumer>
         )
     }
 
@@ -445,7 +530,7 @@ export default class Notice extends Component<INoticeProps, IState> {
 
     private handleToView(url?: string) {
         if (url) {
-            Router.push(url)
+            // Router.push(url)
         }
     }
 }

@@ -1,10 +1,12 @@
 import React, { Component, ChangeEvent, DragEvent, CSSProperties } from 'react'
 import axios from 'axios'
-import { isString, isArray, isNumber, isObject, isFunction } from 'muka'
-import { getClassName, IValue } from '../utils'
+import { isString, isArray, isNumber, isObject, isFunction } from 'lodash'
+import styled, { css } from 'styled-components'
+import { Consumer as ThemeConsumer } from '../ThemeProvider'
+import { IValue, UploadThemeData, getRatioUnit, getUnit, transition, Color, IconThemeData } from '../utils'
 import { Consumer } from '../ConfigProvider'
-import Icon, { iconType } from '../Icon'
 import Progress from '../Progress'
+import Icon, { iconType } from '../Icon'
 
 export interface IUploadFileListProps {
     file: File
@@ -19,11 +21,108 @@ export interface IUploadFileListProps {
     }
 }
 
+const UploadView = styled.div`
+    width: 100%;
+`
+
+interface IUploadViewBoxProps {
+    uploadTheme: UploadThemeData
+}
+/* height: ${({ uploadTheme }) => getUnit(uploadTheme.height)}; */
+const UploadViewBox = styled.div<IUploadViewBoxProps>`
+    border-radius: ${({ uploadTheme, theme }) => getUnit(uploadTheme.borderRadius || theme.borderRadius)};
+    ${({ uploadTheme }) => css`${uploadTheme.border.toString()};`}
+    
+    background: #fafafa;
+    position: relative;
+    cursor: pointer;
+    ${transition(0.5)};
+    padding: ${getRatioUnit(16)} 0;
+    :hover {
+        border-color: ${({ uploadTheme, theme }) => uploadTheme.uploadColor || theme.primarySwatch};
+    }
+`
+
+const UploadDefault = styled.div`
+    text-align: center;
+`
+
+const UploadDefaultIcon = styled.div`
+    margin: 0 0 ${getRatioUnit(20)};
+`
+
+const UploadDefaultTitle = styled.div`
+    line-height: 1.5;
+    margin: 0 0 ${getRatioUnit(4)};
+    color: rgba(0, 0, 0, 0.85);
+    font-size: ${getRatioUnit(16)};
+`
+
+const UploadDefaultLabel = styled.div`
+    color: rgba(0, 0, 0, 0.45);
+    font-size: ${getRatioUnit(14)};
+    height: ${getRatioUnit(40)};
+    text-overflow: -o-ellipsis-lastline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+`
+
+const UploadProView = styled.div`
+    margin-top: ${getRatioUnit(10)};
+`
+
+const UploadProViewItemClose = styled.div`
+    display:none;
+    cursor: pointer;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transform: translate(50%, -50%);
+`
+
+const UploadProViewItem = styled.div<IUploadViewBoxProps>`
+    margin-top: ${getRatioUnit(5)};
+    position: relative;
+    margin-right: ${getRatioUnit(10)};
+
+    :first-child {
+        margin-top: 0;
+    }
+
+    :hover {
+        background: ${({ uploadTheme, theme }) => Color.setOpacity(uploadTheme.uploadColor || theme.primarySwatch, 0.3).toString()};
+        ${UploadProViewItemClose} {
+            display: block;
+        }
+    }
+    
+`
+
+const UploadProViewItemIcon = styled.div`
+    width: ${getRatioUnit(40)};
+    height: ${getRatioUnit(40)};
+    border: ${getRatioUnit(1)} solid #d9d9d9;
+`
+
+const UploadProViewItemProgress = styled.div`
+    padding-left:  ${getRatioUnit(10)};
+`
+
+const IconClose = styled(Icon)`
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    :hover {
+        fill: #fff;
+    }
+`
 export interface IUploadProps {
     className?: string
     uploadViewClassName?: string
     icon?: iconType | JSX.Element
-    iconColor?: string
     title?: string | JSX.Element
     label?: string | JSX.Element
     action?: string
@@ -43,15 +142,14 @@ export interface IUploadProps {
     onUploadError?: (val: IUploadFileListProps, data: any, files: IUploadFileListProps[]) => void
     onFileTypeError?: () => void
     onUploadItemClear?: (delVal: IUploadFileListProps, data: IUploadFileListProps[]) => void
-    onUploadStart?: () => boolean
+    onBeforeUpload?: (file: File) => (boolean | object | Promise<object | boolean>)
     onMaxFileSizeError?: () => void
+    theme?: UploadThemeData
 }
 
 interface IState {
     fileList: IUploadFileListProps[]
 }
-
-const prefixClass = 'upload_dragger'
 
 export default class Upload extends Component<IUploadProps, IState> {
 
@@ -62,7 +160,7 @@ export default class Upload extends Component<IUploadProps, IState> {
 
     public static defaultProps: IUploadProps = {
         multiple: true,
-        onUploadStart: () => true
+        onBeforeUpload: () => true
     }
 
     private intNode: null | HTMLInputElement = null
@@ -74,70 +172,94 @@ export default class Upload extends Component<IUploadProps, IState> {
     }
 
     public render(): JSX.Element {
-        const { className, children, icon, title, label, iconColor, multiple, uploadViewClassName, renderItem, style, fileTypes } = this.props
+        const { className, children, icon, title, label, multiple, uploadViewClassName, renderItem, style, fileTypes, theme } = this.props
         const { fileList } = this.state
         return (
-            <Consumer>
+            <ThemeConsumer>
                 {
-                    (value) => {
-                        const iconProps = icon || (value.uploadDraggerProps && value.uploadDraggerProps.icon)
-                        const iconColorProps = iconColor || (value.uploadDraggerProps && value.uploadDraggerProps.iconColor)
-                        const titleProps = title || (value.uploadDraggerProps && value.uploadDraggerProps.title)
-                        const labelProps = label || (value.uploadDraggerProps && value.uploadDraggerProps.label)
-                        return (
-                            <div className={getClassName(`${prefixClass}`)} style={style}>
-                                <div className={getClassName(`${prefixClass}__box`, className)} onClick={this.handleClick} onDragOver={this.handleDropOver} onDrop={this.handleFileDrop}>
-                                    {
-                                        children ? children : (
-                                            <div className={getClassName(`${prefixClass}__box_default`)}>
-                                                <div className={getClassName(`${prefixClass}__box_default__icon`)}>
-                                                    {isString(iconProps) ? <Icon icon={iconProps || undefined}  /> : iconProps}
-                                                </div>
-                                                <div className={getClassName(`${prefixClass}__box_default__title`)}>
-                                                    {titleProps}
-                                                </div>
-                                                <div className={getClassName(`${prefixClass}__box_default__label`)}>
-                                                    {labelProps}
-                                                </div>
-                                            </div>
-                                        )
-                                    }
-                                    <input style={{ display: 'none' }} type="file" multiple={multiple} ref={(e) => this.intNode = e} onChange={this.handleFileChange} accept={(fileTypes || []).join(',')} />
-                                </div>
-                                <div className={getClassName(`${prefixClass}_upload__view`, uploadViewClassName)}>
-                                    {
-                                        fileList.map((i, index: number) => {
-                                            if (isFunction(renderItem)) {
-                                                return renderItem(i)
-                                            } else {
-                                                if (!i.info.fileName && !i.info.type) {
-                                                    return undefined
+                    (init) => (
+                        <Consumer>
+                            {
+                                (value) => {
+                                    const iconProps = icon || (value.uploadDraggerProps && value.uploadDraggerProps.icon)
+                                    const titleProps = title || (value.uploadDraggerProps && value.uploadDraggerProps.title)
+                                    const labelProps = label || (value.uploadDraggerProps && value.uploadDraggerProps.label)
+                                    return (
+                                        <UploadView style={style}>
+                                            <UploadViewBox
+                                                uploadTheme={theme || init.theme.uploadTheme}
+                                                className={className}
+                                                onClick={this.handleClick}
+                                                onDragOver={this.handleDropOver}
+                                                onDrop={this.handleFileDrop}
+                                            >
+                                                {
+                                                    children ? children : (
+                                                        <UploadDefault>
+                                                            <UploadDefaultIcon>
+                                                                {isString(iconProps) ? (
+                                                                    <Icon
+                                                                        icon={iconProps || undefined}
+                                                                        theme={theme ? theme.iconTheme : init.theme.uploadTheme.iconTheme}
+                                                                    />
+                                                                ) : iconProps}
+                                                            </UploadDefaultIcon>
+                                                            <UploadDefaultTitle>
+                                                                {titleProps}
+                                                            </UploadDefaultTitle>
+                                                            <UploadDefaultLabel>
+                                                                {labelProps}
+                                                            </UploadDefaultLabel>
+                                                        </UploadDefault>
+                                                    )
                                                 }
-                                                return (
-                                                    <div className={getClassName(`${prefixClass}_upload__view__item flex`)} key={index}>
-                                                        <div className={getClassName(`${prefixClass}_upload__view__item__icon flex_center`)}>
-                                                            {
-                                                                this.getTypeView(i.info.type || '', i.preUrl)
+                                                <input style={{ display: 'none' }} type="file" multiple={multiple} ref={(e) => this.intNode = e} onChange={this.handleFileChange} accept={(fileTypes || []).join(',')} />
+                                            </UploadViewBox>
+                                            <UploadProView className={uploadViewClassName}>
+                                                {
+                                                    fileList.map((i, index: number) => {
+                                                        if (isFunction(renderItem)) {
+                                                            return renderItem(i)
+                                                        } else {
+                                                            if (!i.info.fileName && !i.info.type) {
+                                                                return undefined
                                                             }
-                                                        </div>
-                                                        <div className={getClassName(`${prefixClass}_upload__view__item__progress flex_1`)}>
-                                                            <div>{i.info.fileName}</div>
-                                                            <Progress percent={i.info.progress} text={`${i.info.progress}%`} />
-                                                        </div>
-                                                        <div className={getClassName(`${prefixClass}_upload__view__item__close`)}>
-                                                            <Icon icon="ios-close" onClick={this.handleItemClose.bind(this, index)} />
-                                                        </div>
-                                                    </div>
-                                                )
-                                            }
-                                        })
-                                    }
-                                </div>
-                            </div>
-                        )
-                    }
+                                                            return (
+                                                                <UploadProViewItem
+                                                                    className="flex"
+                                                                    uploadTheme={theme || init.theme.uploadTheme}
+                                                                    key={index}
+                                                                >
+                                                                    <UploadProViewItemIcon className="flex_center">
+                                                                        {
+                                                                            this.getTypeView(i.info.type || '', i.preUrl)
+                                                                        }
+                                                                    </UploadProViewItemIcon>
+                                                                    <UploadProViewItemProgress className="flex_1">
+                                                                        <div>{i.info.fileName}</div>
+                                                                        <Progress percent={i.info.progress} text={`${i.info.progress}%`} />
+                                                                    </UploadProViewItemProgress>
+                                                                    <UploadProViewItemClose>
+                                                                        <IconClose
+                                                                            icon="ios-close"
+                                                                            onClick={this.handleItemClose.bind(this, index)}
+                                                                            theme={new IconThemeData({ size: 16 })}
+                                                                        />
+                                                                    </UploadProViewItemClose>
+                                                                </UploadProViewItem>
+                                                            )
+                                                        }
+                                                    })
+                                                }
+                                            </UploadProView>
+                                        </UploadView>
+                                    )
+                                }
+                            }
+                        </Consumer>
+                    )
                 }
-            </Consumer>
+            </ThemeConsumer>
         )
     }
 
@@ -192,7 +314,7 @@ export default class Upload extends Component<IUploadProps, IState> {
     }
 
     private updLoadFiles = (files: FileList) => {
-        const { fileTypes, maxLength, action, name, data, withCredentials, baserUrl, onUploadSuccess, onUploadError, onFileTypeError, headers, onUploadStart, maxFileSize, onMaxFileSizeError } = this.props
+        const { fileTypes, maxLength, action, name, data, withCredentials, baserUrl, onUploadSuccess, onUploadError, onFileTypeError, headers, onBeforeUpload, maxFileSize, onMaxFileSizeError } = this.props
         let { fileList } = this.state
         for (let i = 0; i < files.length; i++) {
             const file = files.item(i)
@@ -249,23 +371,23 @@ export default class Upload extends Component<IUploadProps, IState> {
                 }
                 return i
             }
-            const formData = new FormData()
-            formData.append(name || 'avatar', i.file)
-            let url = action
-            if (isObject(data)) {
-                let params = ''
-                // tslint:disable-next-line: no-shadowed-variable
-                Object.keys(data).map((i: any) => {
-                    params = i + '=' + data[i] + '&'
-                })
-                url = url + '?' + params
-            }
-            if (!i.xhr && isFunction(onUploadStart) && onUploadStart()) {
+            const uplodaFile = (val: IValue | boolean) => {
+                const formData = new FormData()
+                if (isObject(val)) {
+                    Object.keys(val).forEach((i: any) => {
+                        formData.append(i, val[i])
+                    })
+                }
+                formData.append(name || 'avatar', i.file)
+                if (isObject(data)) {
+                    Object.keys(data).forEach((i: any) => {
+                        formData.append(i, data[i])
+                    })
+                }
                 i.xhr = axios({
-                    baseURL: baserUrl,
                     method: 'POST',
                     headers,
-                    url,
+                    url: action,
                     data: formData,
                     withCredentials,
                     onUploadProgress: (progressEvent) => {
@@ -295,7 +417,31 @@ export default class Upload extends Component<IUploadProps, IState> {
                             onUploadError(i, response.data, fileList)
                         }
                     }
+                }).catch(() => {
+                    const { fileList } = this.state
+                    if (fileList[index]) {
+                        fileList[index].info = {
+                            ...fileList[index].info,
+                            progress: 100,
+                            status: 'error'
+                        }
+                        this.setState({
+                            fileList: [...fileList]
+                        })
+                    }
                 })
+            }
+            if (!i.xhr && isFunction(onBeforeUpload)) {
+                const fn = onBeforeUpload(i.file)
+                if (fn instanceof Promise) {
+                    fn.then((value) => {
+                        if (value) {
+                            uplodaFile(value)
+                        }
+                    })
+                } else if (fn) {
+                    uplodaFile(fn)
+                }
             }
             return i
         })

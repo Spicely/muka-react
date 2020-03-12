@@ -1,9 +1,9 @@
 import React, { Component, CSSProperties } from 'react'
 import { isEqual } from 'lodash'
+import Radio from '../Radio'
 import { RadioThemeData, ThemeData } from '../utils'
 import { Consumer } from '../ThemeProvider'
 import { iconType } from '../Icon'
-import Radio from '../Radio'
 
 interface ICheckBoxOptionsProps {
     label: string

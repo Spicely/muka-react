@@ -9,6 +9,11 @@ export default class Color {
         return `rgb(${r},${g},${b})`
     }
 
+    public static hex(color: string): Color {
+        const arr = rgba(color)
+        return `rgb(${arr[0]},${arr[1]},${arr[2]})`
+    }
+
     public static setOpacity(color: string | Color, opacity: number): Color {
         const arr = rgba(color)
         return `rgb(${arr[0]},${arr[1]},${arr[2]},${opacity})`

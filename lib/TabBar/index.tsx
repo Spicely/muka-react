@@ -1,178 +1,364 @@
-import React, { Component, createContext } from 'react'
-import { isNil, isFunction } from 'muka'
-import { getClassName, prefix } from '../utils'
-import TabItem from './TabItem'
+import React, { Component, Children, CSSProperties, cloneElement, createContext } from 'react'
+import styled, { css } from 'styled-components'
+import { isNil, isFunction } from 'lodash'
+import { Consumer as ThemeConsumer } from '../ThemeProvider'
+import { TabBarThemeData, getUnit, transition, getClassName, getRatioUnit, Color, ThemeData } from '../utils'
+import { browser } from 'muka'
+import Icon from '../Icon'
 
-interface IDefaultValue {
-    selectIndex: number
-    setSelected: (index: any, width: number, height: number, activeWidth: number, activeHeght: number, activeLeft: number, activeTop: number, cb?: () => void) => void
-    onChange: (field?: string | number) => void
-    viewId: string
-    tabItemClassName?: string
-    mold: 'tab' | 'menu'
-    type: 'horizontal' | 'vertical'
-    width: number
-    height: number
-    selectedColor?: string
-    setFn: (fn: () => void) => void
-    activeWidth: number
-    activeHeight: number
-    activeLeft: number
-    activeTop: number
-}
+type IMode = 'tab' | 'menu'
 
-const defaultValue: IDefaultValue = {
-    selectIndex: 0,
-    setSelected: (index: any, width: number, height: number, activeWidth: number, activeHeght: number, activeLeft: number, activeTop: number, cb?: () => void) => { return },
-    onChange: (field?: string | number) => { return },
-    viewId: '',
-    mold: 'tab',
-    type: 'horizontal',
-    width: 0,
-    height: 0,
-    setFn: (val: () => void) => { return },
-    activeWidth: 0,
-    activeHeight: 0,
-    activeLeft: 0,
-    activeTop: 0,
-}
-
-export const { Consumer, Provider } = createContext(defaultValue)
+type IType = 'horizontal' | 'vertical'
 
 export interface ITabBarProps {
-    className?: string
-    defaultSelect?: number
+    mode?: IMode
+    type?: IType
+    theme?: TabBarThemeData
+    style?: CSSProperties
     selected?: number
-    tabItemClassName?: string
-    tabBarClassName?: string
-    showLine?: boolean
-    style?: React.CSSProperties
-    selectedColor?: string
-    type?: 'horizontal' | 'vertical'
-    mold?: 'tab' | 'menu'
-    onChange?: (field?: string | number) => void
+    tabViewClassName?: string
+    tabViewBarClassName?: string
+    itemBarClassName?: string
+    itemClassName?: string
+    onChange?: (field: number | string) => void
 }
 
-interface IState {
-    selectIndex: number
-    width: number
-    height: number
-    activeWidth: number
-    activeHeight: number
-    activeLeft: number
-    activeTop: number
+interface IDefaultValue {
+    theme: TabBarThemeData
+    selected?: number | string
+    itemChange?: (field: number | undefined) => void
 }
 
-const prefixClass = 'tab_bar'
+const defaultValue: IDefaultValue = { theme: new TabBarThemeData() }
 
-export default class TabBar extends Component<ITabBarProps, IState> {
+export const { Provider, Consumer } = createContext(defaultValue)
 
-    public static defaultProps: ITabBarProps = {
-        type: 'horizontal',
-        mold: 'tab',
-        showLine: true
+interface ITabBarViewProps {
+    mode?: IMode
+    type?: IType
+    tabBarTheme: TabBarThemeData
+}
+
+const TabBarView = styled.div<ITabBarViewProps>`
+    background: ${({ tabBarTheme }) => tabBarTheme.tabBarColor.toString()};
+    ${({ mode, tabBarTheme }) => {
+        if (mode === 'tab') return css`width: ${getUnit(tabBarTheme.width)}; height: ${getUnit(tabBarTheme.height)};`
+        if (mode === 'menu') return css`width: 100%; height: 100vh;`
+    }}
+`
+
+interface ITabBarItemViewProps {
+    type?: IType
+}
+
+const TabBarItemView = styled.div<ITabBarItemViewProps>`
+    ${({ type, theme }) => {
+        if (type === 'horizontal') return css`width: 100%;`
+        else return css`width: ${getRatioUnit(50)}; ${TabBarItemBox} { width: ${getRatioUnit(50)}; height: ${getRatioUnit(50)};&:hover { background: ${Color.setOpacity(theme.primarySwatch, 0.2).toString()}}}`
+    }}
+    overflow: auto;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+`
+
+const TabBarItemTabView = styled.div`
+    overflow: hidden;
+`
+
+interface ITabBarItemScrollViewProps {
+    tabBarTheme: TabBarThemeData
+    mode?: IMode
+}
+
+const TabBarItemScrollView = styled.div<ITabBarItemScrollViewProps>`
+    width: 100%;
+    height: 100%;
+    flex-shrink: 0;
+    overflow: auto;
+    ${({ tabBarTheme, mode }) => mode === 'menu' ? 0 : tabBarTheme.tabViewPadding.toString()};
+    ${transition(0.5)}
+`
+
+interface ITabBarItem {
+    tabBarTheme: TabBarThemeData
+    selected: boolean
+}
+
+const TabBarItemBox = styled.div<ITabBarItem>`
+    ${({ tabBarTheme }) => css`${tabBarTheme.itemPadding.toString()}`};
+    ${({ selected, tabBarTheme, theme }) => {
+        if (selected) return css`color: ${tabBarTheme.itemSelectColor || theme.primarySwatch};`
+    }}
+    cursor: pointer;
+    ${transition(0.5)};
+    &:hover {
+        color: ${({ tabBarTheme, theme }) => tabBarTheme.itemHoverColor || theme.primarySwatch};
     }
+`
+
+const TabBarIcon = styled.div``
+
+interface IActiveBarProps {
+    tabBarTheme: TabBarThemeData
+    type?: IType
+    activeNum: number
+    selectIndex?: number
+}
+
+const ActiveBar = styled.div<IActiveBarProps>`
+    ${transition(0.3, ['top', 'left'])};
+    ${({ type, activeNum, selectIndex }) => {
+        if (type === 'horizontal') return css`height: ${getRatioUnit(2)};width: ${getRatioUnit(activeNum)};bottom: 0;left: ${getRatioUnit((selectIndex || 0) * activeNum)};`
+        else return css`width: ${getRatioUnit(2)};height: ${getRatioUnit(activeNum)};left: 0;top: ${getRatioUnit((selectIndex || 0) * activeNum)};`
+    }}
+    background: ${({ tabBarTheme, theme }) => tabBarTheme.activeBarColor || theme.primarySwatch};
+    position: absolute;
+`
+
+interface ITabBarItemProps {
+    title?: string | JSX.Element
+    className?: string
+    icon?: JSX.Element
+    selectedIcon?: JSX.Element
+    field?: number
+    tooltipTitle?: string | JSX.Element
+    placement?: any //TooltipPlacement
+}
+
+export class TabBarItem extends Component<ITabBarItemProps, any> {
+
+    public render(): JSX.Element {
+        const { title, icon, className, field } = this.props
+        return (
+            <ThemeConsumer>
+                {
+                    (value) => (
+                        <Consumer>
+                            {
+                                (val) => (
+                                    <TabBarItemBox
+                                        className={getClassName(className, 'flex flex_center')}
+                                        tabBarTheme={val.theme || value.theme.tabBarTheme}
+                                        onClick={val.itemChange ? val.itemChange.bind(this, field) : undefined}
+                                        selected={field === val.selected}
+                                    >
+                                        {
+                                            icon ? (
+                                                <TabBarIcon className="flex_center">
+                                                    {this.getTypeIcon(icon, field === val.selected, val.theme, value.theme)}
+                                                </TabBarIcon>
+                                            ) : null
+                                        }
+                                        {title}
+                                    </TabBarItemBox>
+                                )
+                            }
+                        </Consumer>
+                    )
+                }
+            </ThemeConsumer>
+        )
+    }
+
+    private getTypeIcon = (icon: JSX.Element, selected: boolean, theme: TabBarThemeData, themeData: ThemeData) => {
+        if (icon.type === Icon) {
+            const iconTheme: any = { ...theme.iconTheme }
+            if (selected) {
+                iconTheme.color = theme.itemSelectColor || themeData.primarySwatch
+            }
+            return cloneElement(icon, { theme: iconTheme })
+        } else {
+            return icon
+        }
+    }
+}
+
+interface ITabBarState {
+    selected?: number
+    height: number,
+    menuHeight: string | number
+    width: number
+    activeNum: number
+}
+
+export default class TabBar extends Component<ITabBarProps, ITabBarState> {
 
     constructor(props: ITabBarProps) {
         super(props)
-        this.state.selectIndex = props.defaultSelect || props.selected || 0
+        this.state.selected = props.selected || 0
     }
 
-    public static Item = TabItem
+    public static defaultProps: ITabBarProps = {
+        mode: 'tab',
+        type: 'horizontal'
+    }
 
-    public state: IState = {
-        selectIndex: 0,
+    public static Item = TabBarItem
+
+    public state: ITabBarState = {
+        selected: undefined,
         width: 0,
         height: 0,
-        activeWidth: 0,
-        activeHeight: 0,
-        activeLeft: 0,
-        activeTop: 0
+        menuHeight: '100vh',
+        activeNum: 0
     }
 
-    private fn: (() => void) | null = null
-
-    private id = Date.now().toString()
+    private node: HTMLDivElement | null = null
 
     public render(): JSX.Element {
-        const { className, children, style, onChange, mold, tabItemClassName, tabBarClassName, selectedColor, showLine, selected } = this.props
-        const { activeHeight, activeWidth, activeLeft, activeTop } = this.state
-        let { type } = this.props
-        if (mold === 'menu') {
-            type = 'horizontal'
-        }
-        const tabView = (
-            <div className={`flex ${prefix}${prefixClass}_${type}${tabBarClassName ? ' ' + tabBarClassName : ''}`}>
-                <Provider
-                    value={{
-                        ...this.state,
-                        setSelected: this.handleSelected,
-                        viewId: `tab_bar_${this.id}`,
-                        onChange: onChange ? onChange : (field?: string | number) => { return },
-                        mold: mold || 'tab',
-                        type: type || 'horizontal',
-                        tabItemClassName,
-                        selectedColor,
-                        setFn: this.setFn
-                    }}
-                >
-                    {
-                        React.Children.map(children, (item: any, index: number) => {
-                            const field = item.props.field
-                            return React.cloneElement(item, { field: field ? field : index, onChange, selected })
-                        })
-                    }
-                </Provider>
-                {showLine && <div
-                    className={getClassName(`${prefixClass}_active_bar`)}
-                    style={{ transform: type === 'horizontal' ? `translate3d(${activeLeft}px, 0 , 0)` : `translate3d(0, ${activeTop}px, 0)`, height: type === 'horizontal' ? 2 : activeHeight, width: type === 'horizontal' ? activeWidth : 2, background: selectedColor }}
-                />}
-            </div>
-        )
+        const { mode, type, theme, style, children, tabViewClassName, tabViewBarClassName, itemBarClassName, itemClassName } = this.props
+        const { selected, height, width, activeNum, menuHeight } = this.state
+        const tabBars: JSX.Element[] = []
+        const tabViews: JSX.Element[] = []
+        Children.forEach(children, (child: any, index) => {
+            if (child && child.type === TabBarItem) {
+                tabBars.push(cloneElement(child, {
+                    key: index,
+                    field: index,
+                    className: getClassName(`tab_ev_item${mode === 'menu' ? ' flex_1' : ''}`, itemClassName),
+                }))
+                tabViews.push(child.props.children)
+            }
+        })
         return (
-            <div className={getClassName(`${prefixClass} ${type === 'vertical' ? 'flex' : 'flex_column'} ${prefix}${mold}`, className)} style={style}>
-                {mold !== 'menu' && tabView}
-                <div className={getClassName(`${prefixClass}_view ${prefix}${type}${type === 'horizontal' ? ' flex' : ''}`)} id={`tab_bar_${this.id}`} />
-                {mold === 'menu' && tabView}
-            </div>
+            <ThemeConsumer>
+                {
+                    (value) => (
+                        <Provider
+                            value={{
+                                theme: theme || value.theme.tabBarTheme,
+                                selected,
+                                itemChange: this.handleTabItemChange
+                            }}
+                        >
+                            <TabBarView
+                                mode={mode}
+                                className={mode === 'tab' ? type === 'horizontal' ? 'flex_column' : 'flex' : 'flex_column'}
+                                tabBarTheme={theme || value.theme.tabBarTheme}
+                                style={{
+                                    ...style,
+                                    height: mode === 'menu' ? getUnit(menuHeight) : ''
+                                }}
+                                ref={(e) => this.node = e}
+                            >
+                                {mode === 'tab' ? (
+                                    <TabBarItemView
+                                        type={type}
+                                        className={getClassName(`${type === 'vertical' ? 'flex_column' : 'flex'}`, itemBarClassName)}
+                                    >
+                                        {tabBars}
+                                        <ActiveBar
+                                            activeNum={activeNum}
+                                            selectIndex={selected}
+                                            type={type}
+                                            tabBarTheme={theme || value.theme.tabBarTheme}
+                                        />
+                                    </TabBarItemView>
+                                ) : null}
+                                <TabBarItemTabView
+                                    className={getClassName(`flex_1 ${type === 'vertical' ? 'flex_column' : 'flex'}`, tabViewBarClassName)}
+                                >
+                                    {
+                                        tabViews.map((i, index) => (
+                                            <TabBarItemScrollView
+                                                mode={mode}
+                                                className={tabViewClassName}
+                                                tabBarTheme={theme || value.theme.tabBarTheme}
+                                                style={{
+                                                    transform: `translate3d(${selected && type === 'horizontal' ? getRatioUnit(selected * -width) : 0}, ${selected && type === 'vertical' ? getRatioUnit(selected * -height) : 0}, 0)`
+                                                }}
+                                                key={index}
+                                            >
+                                                {i}
+                                            </TabBarItemScrollView>
+                                        ))
+                                    }
+                                </TabBarItemTabView>
+                                {mode === 'menu' ? (
+                                    <TabBarItemView
+                                        type={type}
+                                        className={getClassName(`${type === 'vertical' ? 'flex_column' : 'flex'} mk_divider_top`, itemBarClassName)}
+                                        style={{
+                                            minHeight: getUnit(50),
+                                        }}
+                                    >
+                                        {tabBars}
+                                    </TabBarItemView>
+                                ) : null}
+                            </TabBarView>
+                        </Provider>
+                    )
+                }
+            </ThemeConsumer>
         )
+    }
+
+    public componentDidMount() {
+        const info = this.getRootNodeInfo()
+        const itemInfo = this.getSelectedNodeInfo()
+        this.setState({
+            height: info.height,
+            menuHeight: browser.height,
+            width: info.width,
+            activeNum: itemInfo
+        })
     }
 
     public UNSAFE_componentWillReceiveProps(nextProps: ITabBarProps) {
-        const { selectIndex } = this.state
-        if (!isNil(nextProps.selected) && nextProps.selected !== selectIndex) {
+        const { selected } = this.state
+        if (!isNil(nextProps.selected) && nextProps.selected !== selected) {
+            const itemInfo = this.getSelectedNodeInfo(nextProps.selected)
             this.setState({
-                selectIndex: nextProps.selected || 0
-            }, () => {
-                const timer = setTimeout(() => {
-                    clearTimeout(timer)
-                    if (isFunction(this.fn)) {
-                        this.fn()
-                    }
-                }, 1)
-
+                activeNum: itemInfo,
+                selected: nextProps.selected
             })
         }
     }
 
-    private setFn = (fn: () => void) => {
-        this.fn = fn
+    public getSelectedNodeInfo = (index?: number) => {
+        const { selected } = this.state
+        const { type } = this.props
+        let value = 0
+        if (this.node && !isNil(selected)) {
+            const node = this.node.querySelectorAll('.tab_ev_item')[index || selected]
+            if (node) {
+                const rect = node.getBoundingClientRect()
+                value = type === 'horizontal' ? rect.width : rect.height
+            }
+        }
+        return value
     }
 
-    private handleSelected = (index: number, width: number, height: number, activeWidth: number, activeHeight: number, activeLeft: number, activeTop: number, cb?: () => void) => {
-        const obj: any = {
-            selectIndex: index,
+    private getRootNodeInfo = () => {
+        let width = 0
+        let height = 0
+        if (this.node) {
+            const node = this.node.getBoundingClientRect()
+            width = node.width
+            height = node.height
+        }
+        return {
             width,
-            height,
-            activeLeft,
-            activeTop
+            height
         }
-        if (activeWidth || activeHeight) {
-            // tslint:disable-next-line: no-string-literal
-            obj['activeHeight'] = activeHeight
-            // tslint:disable-next-line: no-string-literal
-            obj['activeWidth'] = activeWidth
+    }
+
+    private handleTabItemChange = (field?: number) => {
+        const { onChange } = this.props
+        const { selected } = this.state
+        if (selected === field) return
+        if (!isNil(field)) {
+            const info = this.getRootNodeInfo()
+            const itemInfo = this.getSelectedNodeInfo()
+            this.setState({
+                selected: field,
+                width: info.width,
+                height: info.height,
+                activeNum: itemInfo
+            })
+            if (isFunction(onChange)) {
+                onChange(field)
+            }
         }
-        this.setState(obj, cb)
     }
 }

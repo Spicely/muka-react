@@ -14,6 +14,7 @@ export default class IconThemeData {
             if (data.color) this.color = data.color
             if (data.opacity) this.opacity = data.opacity
             if (data.size) this.size = data.size
+            if (data.hoverColor) this.hoverColor = data.hoverColor
         }
     }
 
@@ -22,4 +23,6 @@ export default class IconThemeData {
     public size: number = 22
 
     public opacity: number = 1
+
+    public hoverColor?: Color
 }

@@ -16,10 +16,9 @@ interface IIconImage {
 export interface ILMenuItem {
     className?: string
     field?: string | number
-    iconHighlight?: string
-    iconInitColor?: string
     label: string | JSX.Element
     icon?: IIconImage
+    selected?: number | string
 }
 
 export interface ILayoutMenuOptionsItem {

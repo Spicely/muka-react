@@ -1,11 +1,13 @@
+import { isNil } from 'lodash'
 import Color from './Color'
 import IconThemeData from './IconThemeData'
 
 interface IMenuThemeDataProps {
     menuColor?: Color
     disabledColor?: Color
-    height?: number
-    width?: number
+    height?: number | string
+    width?: number | string
+    itemHeight?: number
     hoverIconColor?: Color
     iconTheme?: IconThemeData
     color?: Color
@@ -21,19 +23,22 @@ export default class MenuThemeData {
             if (data.iconTheme) this.iconTheme = data.iconTheme
             if (data.hoverIconColor) this.hoverIconColor = data.hoverIconColor
             if (data.color) this.color = data.color
+            if (!isNil(data.itemHeight)) this.itemHeight = data.itemHeight
         }
     }
 
-    public color: Color = Color.fromRGB(0, 0, 0)
+    public color?: Color
 
     public menuColor: Color = Color.fromRGBO(255, 255, 255, 1)
 
-    public height: number = 400
+    public height: number | string = 400
 
-    public width: number = 160
+    public width: number | string = 160
+
+    public itemHeight: number = 45
 
     public iconTheme: IconThemeData = new IconThemeData({
-        color: Color.fromRGB(204, 204, 204)
+        color: Color.fromRGB(204, 204, 204),
     })
 
     public hoverIconColor?: Color

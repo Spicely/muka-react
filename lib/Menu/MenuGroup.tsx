@@ -2,10 +2,10 @@ import React, { Component, Fragment } from 'react'
 import { isString } from 'lodash'
 import { Tooltip } from 'antd'
 import { Consumer as ThemeConsumer } from '../ThemeProvider'
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 import { MenuItem } from './MenuItem'
 import { Consumer, IProvider } from './index'
-import { getClassName } from '../utils'
+import { getClassName, transition, getUnit, MenuThemeData, IconThemeData } from '../utils'
 import Icon, { iconType } from '../Icon'
 import Color from '../utils/Color'
 
@@ -18,26 +18,45 @@ export interface IMenuGroup {
     iconInitColor?: string
 }
 
-const Group = styled.div`
-    min-height: ${({ theme }) => theme.menuGroupHeight * theme.ratio + theme.unit};
-    line-height: ${({ theme }) => theme.menuGroupHeight * theme.ratio + theme.unit};
-    color: ${({ theme }) => Color.setOpacity(theme.fontColor, 0.7).toString()};
+interface IStylePorps {
+    menuTheme: MenuThemeData
+}
+
+const Group = styled.div<IStylePorps>`
+    min-height: ${({ menuTheme }) => getUnit(menuTheme.itemHeight)};
+    line-height: ${({ menuTheme }) => getUnit(menuTheme.itemHeight)};
+    color: ${({ menuTheme, theme }) => Color.setOpacity(menuTheme.color || theme.fontColor, 0.7).toString()};
     position: relative;
     cursor: pointer;
 `
 
-const GroupBox = styled.li`
- min-height: ${({ theme }) => theme.menuGroupHeight * theme.ratio + theme.unit};
+const GroupBox = styled.li<IStylePorps>`
+    min-height: ${({ menuTheme }) => getUnit(menuTheme.itemHeight)};
 `
 
 
 const GroupIcon = styled.div`
-   padding: ${({ theme }) => 6 * theme.ratio + theme.unit};
+   padding: ${getUnit(6)};
 `
 
 const GroupLabel = styled.div`
     white-space: nowrap;
 `
+
+const GroupContent = styled.li<IStylePorps & { number: number }>`
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    ${transition(0.5)};
+
+    &.active {
+        max-height: ${({ number, menuTheme }) => getUnit(number * menuTheme.itemHeight)};
+        opacity: 1;
+    }
+`
+const iconTheme = new IconThemeData({
+    size: 13
+})
 
 export class MenuGroup extends Component<IMenuGroup, any> {
     public static defaultProps = {
@@ -89,15 +108,25 @@ export class MenuGroup extends Component<IMenuGroup, any> {
                                         }
                                     }
                                     const jsxNode = (
-                                        <Group className={className} theme={value.theme}>
+                                        <Group
+                                            className={className}
+                                            menuTheme={value.theme.menuTheme}
+                                        >
                                             <ul className={getClassName('menu_group_title', className)}>
-                                                <GroupBox className="flex" onClick={this.handleShowBox}>
+                                                <GroupBox
+                                                    className="flex"
+                                                    onClick={this.handleShowBox}
+                                                    menuTheme={value.theme.menuTheme}
+                                                >
                                                     <GroupIcon className="flex_justify">
                                                         {
                                                             (!val.collapsed && React.Children.count(children) && val.arrowIconPos === 'left') ?
                                                                 (
                                                                     <div className="flex_justify" style={{ transform: (this.selected || visible) ? 'rotate(0deg)' : 'rotate(-90deg)', transition: '0.5s all' }}>
-                                                                        <Icon icon={val.arrowIcon} />
+                                                                        <Icon
+                                                                            icon={val.arrowIcon}
+                                                                            theme={iconTheme}
+                                                                        />
                                                                     </div>
                                                                 ) : null
                                                         }
@@ -108,21 +137,27 @@ export class MenuGroup extends Component<IMenuGroup, any> {
                                                         (!val.collapsed && React.Children.count(children) && val.arrowIconPos === 'right') ?
                                                             (
                                                                 <div className="flex_justify" style={{ transform: (this.selected || visible) ? 'rotate(0deg)' : 'rotate(-90deg)', transition: '0.5s all' }}>
-                                                                    <Icon icon={val.arrowIcon} />
+                                                                    <Icon
+                                                                        icon={val.arrowIcon}
+                                                                        theme={iconTheme}
+                                                                    />
                                                                 </div>
                                                             ) : null
                                                     }
                                                 </GroupBox>
                                                 {
                                                     !val.collapsed ? (
-                                                        <li className={getClassName('menu_group_content flex_1', (this.selected || visible) ? 'active' : '')}>
+                                                        <GroupContent
+                                                            className={getClassName('flex_1', (this.selected || visible) ? 'active' : '')}
+                                                            menuTheme={value.theme.menuTheme}
+                                                            number={React.Children.count(children)}
+                                                        >
                                                             <ul>
                                                                 {node}
                                                             </ul>
-                                                        </li>
+                                                        </GroupContent>
                                                     ) : null
                                                 }
-
                                             </ul>
                                         </Group>
                                     )

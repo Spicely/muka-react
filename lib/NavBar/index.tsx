@@ -1,12 +1,10 @@
 import React, { Component, CSSProperties } from 'react'
-import Router from 'next/router'
 import styled, { css } from 'styled-components'
 import { isArray, isNumber, isNull, isFunction, isString } from 'lodash'
 import { Consumer } from '../ThemeProvider'
-import { IStyledProps } from '../utils'
+import { IStyledProps, NavBarThemeData, getUnit, getRatioUnit, getClassName } from '../utils'
 import Icon, { iconType } from '../Icon'
 import Image from '../Image'
-import Color from '../utils/Color'
 
 export interface INavBarRightIcon {
     type: 'icon'
@@ -38,46 +36,50 @@ export interface INavBarProps {
     divider?: boolean
     animate?: boolean
     onBack?: (() => void) | null
-    backgroundColor?: Color
+    theme?: NavBarThemeData
     onRightClick?: () => void
 }
 
 interface IStyleProps extends IStyledProps {
     fixed?: boolean
-    backgroundColor: Color
+    navBarTheme: NavBarThemeData
 }
 const Nav = styled.div<IStyleProps>`
-    background: ${({ backgroundColor }) => backgroundColor.toString()};
-    height: ${({ theme }) => theme.navBarHeight * theme.ratio + theme.unit};
-    padding: 0 ${({ theme }) => 14 * theme.ratio + theme.unit};
+    background: ${({ navBarTheme, theme }) => navBarTheme.navBarColor || theme.primarySwatch};
+    height: ${({ navBarTheme }) => getUnit(navBarTheme.height)};
+    width: ${({ navBarTheme }) => getUnit(navBarTheme.width)};
+    padding: 0 ${() => getRatioUnit(14)};
     box-sizing: border-box;
     z-index: 8;
     ${({ fixed }) => {
-        if (fixed) return css`top: 0;`
+        if (fixed) return css`position: sticky; top: 0;`
     }}
 `
 
 const NavLeft = styled.div<IStyledProps>`
-    padding-right: ${({ theme }) => 10 * theme.ratio + theme.unit};
-    min-width: ${({ theme }) => 28 * theme.ratio + theme.unit};
+    padding-right: ${() => getRatioUnit(10)};
+    min-width: ${() => getRatioUnit(28)};
 `
 
 const NavTitle = styled.div<IStyledProps>`
-    font-size: ${({ theme }) => 14 * theme.ratio + theme.unit};
+    font-size: ${() => getRatioUnit(14)};
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 `
 
 const NavRight = styled.div<IStyledProps>`
-    padding-left: ${({ theme }) => 10 * theme.ratio + theme.unit};
-    min-width: ${({ theme }) => 28 * theme.ratio + theme.unit};
+    padding-left: ${() => getRatioUnit(10)};
+    min-width: ${() => getRatioUnit(28)};
 
     &__img {
-        width: ${({ theme }) => 22 * theme.ratio + theme.unit};
-        height: ${({ theme }) => 22 * theme.ratio + theme.unit};
+        width: ${() => getRatioUnit(22)};
+        height: ${() => getRatioUnit(22)};
     }
 
     &__item {
         display: inline-block;
-        margin-right: ${({ theme }) => 5 * theme.ratio + theme.unit};
+        margin-right: ${() => getRatioUnit(5)};
 
         &:last-child {
             margin-right: 0;
@@ -86,12 +88,12 @@ const NavRight = styled.div<IStyledProps>`
 `
 
 const NavImg = styled(Image) <IStyledProps>`
-    width: ${({ theme }) => 22 * theme.ratio + theme.unit};
-    height: ${({ theme }) => 22 * theme.ratio + theme.unit};
+    width: ${() => getRatioUnit(22)};
+    height: ${() => getRatioUnit(22)};
 `
 const NavItem = styled.div<IStyledProps>`
     display: inline-block;
-    margin-right: ${({ theme }) => 5 * theme.ratio + theme.unit};
+    margin-right: ${() => getRatioUnit(5)};
 
     &:last-child {
         margin-right: 0;
@@ -105,7 +107,7 @@ export default class NavBar extends Component<INavBarProps, any> {
     }
 
     public render(): JSX.Element {
-        const { className, left, divider, title, right, fixed, leftClassName, titleCenter, titleClassName, rightClassName, style, onRightClick, children, backgroundColor } = this.props
+        const { className, left, divider, title, right, fixed, leftClassName, titleCenter, titleClassName, rightClassName, style, onRightClick, children, theme } = this.props
         const c: any = right
         let rightValue: any = []
         return (
@@ -121,6 +123,7 @@ export default class NavBar extends Component<INavBarProps, any> {
                                                 icon={item.url}
                                                 color={item.color}
                                                 onClick={this.handleClick.bind(this, item.link, item.onClick)}
+                                                theme={theme ? theme.rightIconTheme : value.theme.navBarTheme.rightIconTheme}
                                             />
                                         </NavItem>
 
@@ -146,29 +149,30 @@ export default class NavBar extends Component<INavBarProps, any> {
                                 className={`${divider ? ' mk_divider' : ''} flex_justify ${className || ''}`}
                                 style={style}
                                 fixed={fixed}
-                                backgroundColor={backgroundColor || value.theme.primarySwatch}
+                                navBarTheme={theme || value.theme.navBarTheme}
                                 theme={value.theme}
                             >
                                 <div className="flex">
                                     {
-                                        !isNull(left) && (
-                                            <NavLeft
-                                                className={`flex_justify ${leftClassName || ''}`}
-                                                onClick={this.handleBack}
-                                            >
-                                                {left ? left : <Icon icon="ios-arrow-back" />}
-                                            </NavLeft>
-                                        )
+                                        <NavLeft
+                                            className={`flex_justify ${leftClassName || ''}`}
+                                            onClick={this.handleBack}
+                                        >
+                                            {left ? left : !isNull(left) ? <Icon
+                                                icon="ios-arrow-back"
+                                                theme={theme ? theme.iconTheme : value.theme.navBarTheme.iconTheme}
+                                            /> : null}
+                                        </NavLeft>
                                     }
                                     <NavTitle
-                                        className={`flex_1 ${titleCenter ? 'flex_center' : 'flex_justify'} ${titleClassName}`}
+                                        className={getClassName(`flex_1 ${titleCenter ? 'flex_center' : 'flex_justify'}`, titleClassName)}
                                     >
                                         {title || children}
                                     </NavTitle>
                                     {
                                         !isNull(rightValue) && (
                                             <NavRight
-                                                className={`flex ${isString(rightValue) ? 'flex_justify' : ''} ${rightClassName || ''} `}
+                                                className={getClassName(`flex${isString(rightValue) ? ' flex_justify' : ''}`, rightClassName)}
                                                 onClick={onRightClick}
                                             >
                                                 {rightValue}
@@ -206,7 +210,7 @@ export default class NavBar extends Component<INavBarProps, any> {
             status = onClick() || false
         }
         if (status && link) {
-            Router.push(link)
+            // Router.push(link)
         }
     }
 
@@ -217,7 +221,7 @@ export default class NavBar extends Component<INavBarProps, any> {
         } else if (isNull(onBack)) {
             return
         } else {
-            Router.back()
+            // Router.back()
         }
     }
 }

@@ -1,8 +1,10 @@
 import React, { Component, ChangeEvent, MouseEvent, CSSProperties } from 'react'
 import { SketchPicker, ChromePicker, BlockPicker, GithubPicker, TwitterPicker, HuePicker, AlphaPicker, CirclePicker, SliderPicker, CompactPicker, MaterialPicker, SwatchesPicker, ColorResult } from 'react-color'
-import { isFunction } from 'muka'
+import styled from 'styled-components'
+import { isFunction } from 'lodash'
 import Mask from './mask'
-import { getClassName } from '../utils'
+import { Consumer } from '../ThemeProvider'
+import { getClassName, ColorsThemeData, getUnit, getRatioUnit } from '../utils'
 
 export type colorsType = 'sketch' | 'chrome' | 'block' | 'github' | 'twitter' | 'hue' | 'alpha' | 'circle' | 'slider' | 'compact' | 'material' | 'swatches'
 
@@ -12,6 +14,7 @@ export interface IColorsProps {
     initColor?: string
     style?: CSSProperties
     onChange?: (color: ColorResult, event: ChangeEvent) => void
+    theme?: ColorsThemeData
     [name: string]: any
 }
 
@@ -22,7 +25,54 @@ interface IState {
     left: number
 }
 
-const prefixClass = 'colors'
+interface IColorViewProps {
+    colorsTheme: ColorsThemeData
+}
+
+const ColorView = styled.div<IColorViewProps>`
+    position: relative;
+    height: ${({ colorsTheme }) => getUnit(colorsTheme.height)};
+    border-radius: ${({ colorsTheme, theme }) => getRatioUnit(colorsTheme.borderRadius || theme.borderRadius)};
+`
+
+const ColorViewBox = styled.div<IColorViewProps>`
+    width: ${() => getRatioUnit(80)};
+    height: ${({ colorsTheme }) => getUnit(colorsTheme.height)};
+    padding: ${() => getRatioUnit(1)};
+    background: ${({ colorsTheme }) => colorsTheme.colorsColor.toString()};
+    box-shadow: rgba(0, 0, 0, 0.1) 0 0 0 ${() => getRatioUnit(1)};
+    cursor: pointer;
+`
+
+const ColorBoxEv = styled.div`
+    width: 100%;
+    height: 100%;
+`
+
+const ColorLabel = styled.div`
+    margin-left: ${getRatioUnit(8)};
+    font-size: ${getRatioUnit(14)};
+`
+
+const ColorSelect = styled.div`
+    position: absolute;
+    top: ${getRatioUnit(40)};
+    .sketch {
+        height: ${getRatioUnit(300)};
+    }
+
+    .chrome {
+        height: ${getRatioUnit(240)};
+    }
+
+    .block {
+        height: ${getRatioUnit(220)};
+    }
+
+    .github {
+        height: ${getRatioUnit(60)};
+    }
+`
 
 export default class Colors extends Component<IColorsProps, IState> {
 
@@ -47,22 +97,38 @@ export default class Colors extends Component<IColorsProps, IState> {
     private colorNode: Element | null = null
 
     public render(): JSX.Element {
-        const { className, style } = this.props
+        const { className, style, theme } = this.props
         const { color, visible, left, top } = this.state
         return (
-            <div className={getClassName(`${prefixClass} flex_justify`, className)} style={style}>
-                <div className="flex">
-                    <div className={getClassName(`${prefixClass}_color`)} ref={(e) => this.colorNode = e} onClick={this.handleClick}>
-                        <div className={getClassName(`${prefixClass}_color_box`)} style={{ background: color }}></div>
-                    </div>
-                    <div className={getClassName(`${prefixClass}_label flex_justify`)}>{color}</div>
-                </div>
-                <Mask visible={visible} onClose={this.handleClose}>
-                    <div className={getClassName(`${prefixClass}_select`)} style={{ left, top }}>
-                        {this.getColorNode()}
-                    </div>
-                </Mask>
-            </div>
+            <Consumer>
+                {
+                    (init) => (
+                        <ColorView
+                            className={getClassName('flex_justify', className)}
+                            colorsTheme={theme || init.theme.colorsTheme}
+                            style={style}
+                        >
+                            <div className="flex">
+                                <ColorViewBox
+                                    ref={(e) => this.colorNode = e}
+                                    colorsTheme={theme || init.theme.colorsTheme}
+                                    onClick={this.handleClick}
+                                >
+                                    <ColorBoxEv style={{ background: color }} />
+                                </ColorViewBox>
+                                <ColorLabel className="flex_justify">{color}</ColorLabel>
+                            </div>
+                            <Mask visible={visible} onClose={this.handleClose}>
+                                <ColorSelect
+                                    style={{ left, top }}
+                                >
+                                    {this.getColorNode()}
+                                </ColorSelect>
+                            </Mask>
+                        </ColorView>
+                    )
+                }
+            </Consumer>
         )
 
     }
@@ -93,27 +159,15 @@ export default class Colors extends Component<IColorsProps, IState> {
         const { width, height, type } = this.props
         const { color } = this.state
         const props: any = {
-            className: getClassName(`${prefixClass}_${type}`),
+            className: type,
             width,
             height,
             onChange: this.handleChange,
             color
         }
-
-        // tslint:disable-next-line: switch-default
         switch (type) {
-            case 'github': {
-                if (!width) {
-                    props.width = 212
-                }
-                // tslint:disable-next-line: align
-            } break
-            case 'twitter': {
-                if (!height) {
-                    props.width = 212
-                }
-                // tslint:disable-next-line: align
-            } break
+            case 'github': if (!width) props.width = 212; break;
+            case 'twitter': if (!height) props.width = 212; break;
         }
         switch (type) {
             case 'swatches': return <SwatchesPicker {...props} />

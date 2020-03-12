@@ -166,7 +166,7 @@ export default class ImagePicker extends Component<IImagePickerProps, IState> {
     }
 
     private getAddBox(): JSX.Element | undefined {
-        const { icon, iconStyle, maxLength } = this.props
+        const { icon, maxLength } = this.props
         const { files } = this.state
         if (!maxLength || maxLength > files.length) {
             return (

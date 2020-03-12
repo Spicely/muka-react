@@ -1,9 +1,9 @@
 import React, { Component, MouseEvent, CSSProperties } from 'react'
 import styled, { css } from 'styled-components'
-import { omit, isFunction } from 'lodash'
+import { omit, isFunction, isNil } from 'lodash'
 import { Consumer } from '../ThemeProvider'
 import Icon from '../Icon'
-import { IStyledProps, transition } from '../utils'
+import { IStyledProps, transition, ButtonThemeData, getRatioUnit, getUnit } from '../utils'
 import Color from '../utils/Color'
 
 export type buttonMold = 'circle' | 'error' | 'primary'
@@ -22,92 +22,109 @@ export interface IButtonProps {
     onClick?: (e: MouseEvent<HTMLButtonElement, MouseEvent>) => (Promise<void> | void)
     type?: any
     style?: CSSProperties
+    theme?: ButtonThemeData
 }
 interface IBtnStyleProps extends IStyledProps {
     mold?: buttonMold
     fixed?: boolean
-    spinning: boolean
+    buttonTheme: ButtonThemeData
 }
 
 const Btn = styled.button<IBtnStyleProps>`
-    height: ${({ theme }) => theme.buttonTheme.height * theme.ratio + theme.unit};
+    height: ${({ buttonTheme }) => getUnit(buttonTheme.height)};
+    ${({ buttonTheme }) => {
+        if (!isNil(buttonTheme.width)) {
+            return css`width: ${getUnit(buttonTheme.width)};`
+        }
+    }};
     transition: all .1s cubic-bezier(0.65, 0.05, 0.36, 1);
-    border: none;
-    border-radius: ${({ theme }) => theme.borderRadius * theme.ratio + theme.unit};
+    ${({ buttonTheme, theme }) => css`${buttonTheme.borderRadius || theme.borderRadius}`};
     background: initial;
-    border: ${({ theme }) => 1 * theme.ratio + theme.unit} solid #ddd;
+    border: ${() => getRatioUnit(1)} solid #ddd;
     outline: none;
-    min-width: ${({ theme }) => 78 * theme.ratio + theme.unit};
+    min-width: ${() => getRatioUnit(78)};
     cursor: pointer;
     ${transition(0.5)};
     -webkit-tap-highlight-color: transparent;
-
-    &:hover {
-        border-color: ${({ theme }) => Color.setOpacity(theme.primarySwatch, 0.8).toString()};
-    }
-
-   ${props => {
-        if (props.mold === 'primary') {
+    ${({ buttonTheme }) => {
+        if (buttonTheme.border) return css`${buttonTheme.border.toString()}`;
+        else return css`border: none;`
+    }}
+    
+   ${({ theme, buttonTheme, mold }) => {
+        if (mold === 'primary') {
             return css`
-                min-width: ${78 * props.theme.ratio + props.theme.unit};
-                background: ${props.theme.primarySwatch};
-                color: #fff;
-                border-color: ${props.theme.primarySwatch};
+                background: ${buttonTheme.buttonColor || theme.primarySwatch};
+                color:${(buttonTheme.color || Color.hex('#fff')).toString()};
+                border-color: ${buttonTheme.buttonColor || theme.primarySwatch};
                 align-items: center;
                 cursor: pointer;
-                &:hover {
-                    border-color: ${Color.setOpacity(props.theme.primarySwatch, 0.8).toString()};
-                    background: ${Color.setOpacity(props.theme.primarySwatch, 0.8).toString()};
+                :hover {
+                    color: ${Color.setOpacity(buttonTheme.color || Color.hex('#fff'), 0.8).toString()};
+                    border-color: ${Color.setOpacity(buttonTheme.buttonColor || theme.primarySwatch, 0.8).toString()};
+                    background: ${Color.setOpacity(buttonTheme.buttonColor || theme.primarySwatch, 0.8).toString()};
                 }
             `
         }
-        if (props.mold === 'error') {
+        if (mold === 'error') {
             return css`
-                color: ${props.theme.errorColor};
-                border-color: ${props.theme.errorColor};
-        
-                &:hover {
-                    border-color: ${props.theme.errorColor};
-                    background: ${Color.setOpacity(props.theme.errorColor, 0.4).toString()};
+                color: ${buttonTheme.errorColor || theme.errorColor};
+                border-color: ${buttonTheme.errorColor || theme.errorColor};
+                :hover {
+                    color: ${Color.setOpacity(buttonTheme.color || Color.hex('#fff'), 0.8).toString()};
+                    border-color: ${buttonTheme.errorColor || theme.errorColor};
+                    background: ${Color.setOpacity(buttonTheme.errorColor || theme.errorColor, 0.8).toString()};
                 }
             `
         }
 
-        if (props.mold === 'circle') {
+        if (mold === 'circle') {
             return css`
                 border-radius: 50%;
                 padding: 0;
-                width: ${props.theme.buttonTheme.height * props.theme.ratio + props.theme.unit};
+                width: ${getUnit(buttonTheme.height)};
                 min-width: initial;
-                background: ${props.theme.primarySwatch};
-                color: #fff;
+                background: ${buttonTheme.buttonColor || theme.primarySwatch};
+                color: ${buttonTheme.color ? buttonTheme.color.toString() : '#fff'};
                 fill: #fff;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
                 border: 0;
+                :hover {
+                    color: ${Color.setOpacity(buttonTheme.color || Color.hex('#fff'), 0.8).toString()};
+                    border-color: ${Color.setOpacity(buttonTheme.buttonColor || theme.primarySwatch, 0.8).toString()};
+                    background: ${Color.setOpacity(buttonTheme.buttonColor || theme.primarySwatch, 0.8).toString()};
+                }
             `
         }
+        return css`
+            color: ${buttonTheme.color ? buttonTheme.color.toString() : Color.hex('#000').toString()};
+            :hover {
+                color: ${Color.setOpacity(buttonTheme.color || Color.hex('#000'), 0.8).toString()};
+                border-color: ${Color.setOpacity(buttonTheme.buttonColor || theme.primarySwatch, 0.8).toString()};
+            }
+        `
     }}
-    ${props => {
-        if (props.disabled) {
+    ${({ disabled, buttonTheme }) => {
+        if (disabled) {
             return css`
-                border-color: #dfd8d8;
-                color: rgba(0, 0, 0, 0.25);
-                background: #dfd8d8;
+                border-color: ${() => buttonTheme.disabledBorderColor.toString()};
+                color: ${() => buttonTheme.disabledFontColor.toString()};
+                background: ${() => buttonTheme.disabledColor.toString()};
                 cursor: no-drop;
                 
                 &:hover {
-                    border-color: #dfd8d8;
-                    color: rgba(0, 0, 0, 0.25);
-                    background: #dfd8d8;
+                    border-color: ${() => buttonTheme.disabledBorderColor.toString()};
+                    color: ${() => buttonTheme.disabledFontColor.toString()};
+                    background: ${() => buttonTheme.disabledColor.toString()};
                 }
             `
         }
     }}
-    ${props => {
-        if (props.fixed) {
+    ${({ theme, buttonTheme, fixed }) => {
+        if (fixed) {
             return css`
                 position: fixed;
                 bottom: 0;
@@ -115,27 +132,20 @@ const Btn = styled.button<IBtnStyleProps>`
                 width: 100%;
                 border-radius: 0;
                 border: none;
-                background: ${props.theme.primarySwatch};
+                background: ${buttonTheme.buttonColor || theme.primarySwatch};
             `
         }
     }}
-    ${props => {
-        if (props.spinning) {
-            return css`
-                vertical-align: middle;
-                position: relative;
-                fill: #fff;
-                top: ${-2 * props.theme.ratio + props.theme.unit};
-                right: ${-5 * props.theme.ratio + props.theme.unit};
-            `
-        }
-    }}
+    
+`
+
+const BtnLabel = styled.span<IBtnStyleProps>`
+    font-size: ${({ buttonTheme, theme }) => getUnit(buttonTheme.fontSize, theme.fontSize)};
 `
 
 export default class Button extends Component<IButtonProps, IState> {
 
     public static defaultProps = {
-        mold: 'default',
         tick: true
     }
 
@@ -144,7 +154,7 @@ export default class Button extends Component<IButtonProps, IState> {
     }
 
     public render(): JSX.Element {
-        const { children, className, fixed, mold, disabled } = this.props
+        const { children, className, fixed, mold, disabled, theme } = this.props
         const { loading } = this.state
         const otherProps = omit(this.props, ['children', 'className', 'fixed', 'mold', 'tick', 'disabled', 'onClick', 'async'])
         return (
@@ -155,16 +165,26 @@ export default class Button extends Component<IButtonProps, IState> {
                             {...otherProps}
                             className={className}
                             disabled={loading || disabled}
-                            spinning={loading}
                             mold={mold}
                             fixed={fixed}
                             theme={value.theme}
+                            buttonTheme={theme || value.theme.buttonTheme}
                             onClick={this.handelOk}
                         >
                             <div className="flex_center">
                                 <span className="flex">
-                                    {loading ? <Icon icon="loading" style={{ marginRight: '8px' }} color="#fff" rotate /> : ''}
-                                    <span className="flex_center">{children}</span>
+                                    {loading ? <Icon
+                                        icon="loading"
+                                        style={{ marginRight: '8px' }}
+                                        theme={theme ? theme.iconTheme : value.theme.buttonTheme.iconTheme}
+                                        rotate
+                                    /> : ''}
+                                    <BtnLabel
+                                        className="flex_center"
+                                        buttonTheme={theme || value.theme.buttonTheme}
+                                    >
+                                        {children}
+                                    </BtnLabel>
                                 </span>
                             </div>
                         </Btn>
@@ -185,7 +205,7 @@ export default class Button extends Component<IButtonProps, IState> {
                 this.setState({
                     loading: true
                 }, () => {
-                    const fn: any = onClick(e)
+                    const fn = onClick(e)
                     if (fn instanceof Promise) {
                         fn.then((data: any) => {
                             this.setState({
@@ -195,11 +215,6 @@ export default class Button extends Component<IButtonProps, IState> {
                             this.setState({
                                 loading: false
                             })
-                        })
-                    } else if (fn.constructor.name === 'GeneratorFunction') {
-                        fn()
-                        this.setState({
-                            loading: false
                         })
                     } else {
                         this.setState({

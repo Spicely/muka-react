@@ -1,7 +1,7 @@
 
 import React, { Component } from 'react'
 import { DatePicker } from 'antd'
-import { omit } from 'muka'
+import { omit } from 'lodash'
 import { getClassName } from '../utils'
 import { Moment } from 'moment'
 

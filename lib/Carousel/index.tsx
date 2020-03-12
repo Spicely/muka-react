@@ -1,18 +1,121 @@
-import React, { Component, CSSProperties } from 'react'
-import { isNumber, isFunction } from 'muka'
+import React, { Component, CSSProperties, Children } from 'react'
+import { isNumber, isFunction, isNil, isObject } from 'lodash'
+import styled, { css } from 'styled-components'
+import { Consumer } from '../ThemeProvider'
 import Image from '../Image'
-import { getClassName, prefix } from '../utils'
+import { getClassName, CarouselThemeData, getUnit, transition, getRatioUnit, Color, IValue } from '../utils'
 
 export interface ICarouselValueProps {
     url: string
     link?: string
 }
 
+type IDotPos = 'top' | 'bottom' | 'left' | 'right' | 'bottomRight' | 'bottomLeft'
+
+type IDotType = 'rectangle' | 'circular'
+
+interface ICarouselViewProps {
+    carouselTheme: CarouselThemeData
+}
+
+const CarouselView = styled.div<ICarouselViewProps>`
+    height: ${({ carouselTheme }) => getUnit(carouselTheme.height)};
+    ${({ carouselTheme }) => {
+        if (!isNil(carouselTheme.width)) {
+            return css` width: ${getUnit(carouselTheme.width)};`
+        }
+    }}
+    position: relative;
+    overflow: hidden;
+`
+interface ICarouselViewItemProps {
+    fade: boolean
+}
+const CarouselViewItem = styled.div<ICarouselViewItemProps>`
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    flex-shrink: 0;
+    ${transition(0.3)};
+    ${({ fade }) => {
+        if (fade) return css`position: absolute;top: 0;left: 0;`
+    }}
+`
+
+const CarouselViewItemImg = styled(Image)`
+    width: 100%;
+`
+
+interface ICarouselDotProps {
+    dotPosition?: IDotPos
+}
+
+const CarouselDot = styled.div<ICarouselDotProps>`
+    position: absolute;
+    ${transition(0.3)};
+    ${({ dotPosition }) => {
+        switch (dotPosition) {
+            case 'bottomLeft': return css`top: calc(100% - ${getRatioUnit(20)});left: ${getRatioUnit(20)};height: ${getRatioUnit(20)};`
+            case 'bottomRight': return css`top: calc(100% - ${getRatioUnit(20)});left: calc(100% - ${getRatioUnit(20)});height: ${getRatioUnit(20)};transform: translate(-100%, 0);`
+            case 'top': return css`width: 100%;top: 0;left: 0;height: ${getRatioUnit(20)};`
+            case 'left': return css`width: ${getRatioUnit(20)};top: 0;left: 0;height: 100%;`
+            case 'right': return css`width: ${getRatioUnit(20)};top: 0;left: calc(100% - ${getRatioUnit(20)});height: 100%;`
+            default: return css`width: 100%; top: calc(100% - ${getRatioUnit(20)});left: 0;height: ${getRatioUnit(20)};`
+        }
+    }}
+`
+
+interface ICarouselDotItemProps {
+    carouselTheme: CarouselThemeData
+    dotType?: IDotType
+    dotPos?: IDotPos
+    dotColor?: Color
+    active: boolean
+}
+
+const CarouselDotItem = styled.div<ICarouselDotItemProps>`
+    cursor: pointer;
+    ${transition(0.3)};
+    ${({ dotPos }) => {
+        if (dotPos === 'left' || dotPos === 'right') {
+            return css`margin-bottom: ${getRatioUnit(5)};`
+        } else {
+            return css`margin-right: ${getRatioUnit(5)};`
+        }
+    }}
+    ${({ dotType, carouselTheme, theme, dotPos }) => {
+        if (dotType === 'circular') return css`height: ${getRatioUnit(carouselTheme.dotSize)};width: ${getUnit(carouselTheme.dotSize)}; border-radius: 50%;`
+        if (dotType === 'rectangle') {
+            if (dotPos === 'left' || dotPos === 'right') {
+                return css`height: ${getUnit(carouselTheme.dotSize)};width: ${getRatioUnit(carouselTheme.dotSize / 2)};border-radius: ${getRatioUnit(carouselTheme.dotBorderRadius || theme.borderRadius)};`
+            } else {
+                return css`height: ${getUnit(carouselTheme.dotSize / 2)};width: ${getRatioUnit(carouselTheme.dotSize)};border-radius: ${getRatioUnit(carouselTheme.dotBorderRadius || theme.borderRadius)};`
+            }
+        }
+    }}
+    ${({ active, carouselTheme, theme, dotColor }) => {
+        if (active) return css`background: ${dotColor || carouselTheme.dotColor || theme.primarySwatch};`
+        else return css`background: ${Color.setOpacity(dotColor || carouselTheme.dotColor || theme.primarySwatch, 0.6).toString()};`
+    }}
+    ${({ active, dotType, carouselTheme, dotPos }) => {
+        if (active && dotType === 'rectangle') {
+            if (dotPos === 'left' || dotPos === 'right') {
+                return css`height: ${getRatioUnit(carouselTheme.dotSize * 1.5)};`
+            } else {
+                return css`width: ${getRatioUnit(carouselTheme.dotSize * 1.5)};`
+            }
+        }
+    }}
+    &:last-child {
+        margin-right: 0;
+    }
+`
+
 export interface ICarouselProps {
     className?: string
-    dotPosition?: 'top' | 'bottom' | 'left' | 'right' | 'bottomRight' | 'bottomLeft'
-    dotType?: 'rectangle' | 'circular'
-    dotColor?: string
+    dotPosition?: IDotPos
+    dotType?: IDotType
+    dotColor?: Color
     dotClassName?: string
     value: ICarouselValueProps[]
     dots?: boolean
@@ -24,6 +127,7 @@ export interface ICarouselProps {
     effect?: 'scrollx' | 'scrolly' | 'fade'
     baseUrl?: string
     selected?: number
+    theme?: CarouselThemeData
 }
 
 interface IState {
@@ -69,12 +173,12 @@ export default class Carousel extends Component<ICarouselProps, IState> {
     private animateNode: Element | null = null
 
     public render(): JSX.Element {
-        const { className, dotPosition, dotClassName, dots, effect, style, autoplay, value, dotType, dotColor, baseUrl } = this.props
+        const { className, dotPosition, dotClassName, dots, effect, style, autoplay, value, dotType, dotColor, baseUrl, theme, children } = this.props
         const { selectIndex, left, top, animate } = this.state
         const cssStyle: CSSProperties = {}
         const dotStyle: CSSProperties = {}
         if (dotColor) {
-            dotStyle.background = dotColor
+            dotStyle.background = dotColor.toString()
         }
         if (effect === 'scrollx') {
             cssStyle.transform = `translate3d(-${selectIndex * left}px, 0, 0)`
@@ -83,72 +187,90 @@ export default class Carousel extends Component<ICarouselProps, IState> {
             cssStyle.transform = `translate3d(0, -${selectIndex * top}px, 0)`
             cssStyle.transition = animate ? '' : 'none'
         }
+        const childs = children || value
         return (
-            <div
-                className={getClassName(`${prefixClass}${effect === 'scrollx' ? ' flex' : ''}`, className)}
-                style={style}
-                ref={(e) => this.carouselNode = e}
-            >
+            <Consumer>
                 {
-                    value.map((child, index) => {
-                        return (
-                            <div
-                                className={getClassName(`${prefixClass}__item flex_center ${effect === 'fade' ? prefix + 'fade' : ''}`)}
-                                style={{
-                                    ...cssStyle,
-                                    opacity: effect === 'fade' ? index === selectIndex ? 1 : 0 : 1
-
-                                }}
-                                ref={this.domAddEvent.bind(this, index)}
-                                key={index}
-                            >
-                                {
-                                    <Image className={getClassName(`${prefixClass}__item_image`)} src={baseUrl + child.url} />
+                    (init) => (
+                        <CarouselView
+                            className={getClassName(`${prefixClass}${effect === 'scrollx' ? ' flex' : ''}`, className)}
+                            style={style}
+                            carouselTheme={theme || init.theme.carouselTheme}
+                            ref={(e) => this.carouselNode = e}
+                        >
+                            {
+                                Children.map(childs, (child?: IValue, index?: any) => {
+                                    return (
+                                        <CarouselViewItem
+                                            className="flex_center"
+                                            fade={effect === 'fade'}
+                                            style={{
+                                                ...cssStyle,
+                                                opacity: effect === 'fade' ? index === selectIndex ? 1 : 0 : 1
+                                            }}
+                                            ref={this.domAddEvent.bind(this, index)}
+                                            key={index}
+                                        >
+                                            {
+                                                isObject(child) ? child._owner ? child : <CarouselViewItemImg src={baseUrl + child.url} /> : child
+                                            }
+                                        </CarouselViewItem>
+                                    )
+                                })
+                            }
+                            {autoplay && effect !== 'fade' && Children.map(childs, (child?: IValue, index?: any) => {
+                                if (index === 0) {
+                                    return (
+                                        <CarouselViewItem
+                                            className="flex_center"
+                                            fade={false}
+                                            style={cssStyle}
+                                            key={`extend_${index}`}
+                                            ref={(e) => this.animateNode = e}
+                                        >
+                                            {
+                                                isObject(child) ? child._owner ? child : <CarouselViewItemImg src={baseUrl + child.url} /> : child
+                                            }
+                                        </CarouselViewItem>
+                                    )
                                 }
-                            </div>
-                        )
-                    })
-                }
-                {autoplay && effect !== 'fade' && value.map((child, index) => {
-                    if (index === 0) {
-                        return (
-                            <div
-                                className={getClassName(`${prefixClass}__item flex_center`)}
-                                style={cssStyle}
-                                key={`extend_${index}`}
-                                ref={(e) => this.animateNode = e}
-                            >
-                                {
-                                    <Image className={getClassName(`${prefixClass}__item_image`)} src={baseUrl + child.url} />
-                                }
-                            </div>
-                        )
-                    }
-                    return undefined
-                })
-                }
-                {
-                    dots && (
-                        <div className={getClassName(`${prefixClass}_dot ${prefix}${dotPosition}  flex_justify`)}>
-                            <div className="flex_center">
-                                <span className={(dotPosition === 'bottom' || dotPosition === 'top' || dotPosition === 'bottomRight' || dotPosition === 'bottomLeft') ? 'flex' : ''}>
-                                    {
-                                        value.map((child, index) => {
-                                            return (
-                                                <div
-                                                    className={getClassName(`${prefixClass}_dot__item ${prefix}${dotType} ${selectIndex % value.length === index ? prefix + 'active' : ''}`, dotClassName)} key={index}
-                                                    onClick={this.handleTabIndex.bind(this, index)}
-                                                    style={selectIndex % value.length === index ? { background: dotColor } : dotStyle}
-                                                />
-                                            )
-                                        })
-                                    }
-                                </span>
-                            </div>
-                        </div>
+                                return undefined
+                            })
+                            }
+                            {
+                                dots && (
+                                    <CarouselDot
+                                        dotPosition={dotPosition}
+                                        className="flex_justify"
+                                    >
+                                        <div className="flex_center">
+                                            <span className={(dotPosition === 'bottom' || dotPosition === 'top' || dotPosition === 'bottomRight' || dotPosition === 'bottomLeft') ? 'flex' : ''}>
+                                                {
+                                                    Children.map(childs, (child, index) => {
+                                                        return (
+                                                            <CarouselDotItem
+                                                                carouselTheme={theme || init.theme.carouselTheme}
+                                                                dotType={dotType}
+                                                                dotPos={dotPosition}
+                                                                dotColor={dotColor}
+                                                                active={selectIndex % (value.length || Children.count(children)) === index}
+                                                                className={dotClassName}
+                                                                key={index}
+                                                                onClick={this.handleTabIndex.bind(this, index)}
+                                                            />
+                                                        )
+                                                    })
+                                                }
+                                            </span>
+                                        </div>
+                                    </CarouselDot>
+                                )
+                            }
+                        </CarouselView>
                     )
                 }
-            </div>
+            </Consumer>
+
         )
     }
 
@@ -207,12 +329,12 @@ export default class Carousel extends Component<ICarouselProps, IState> {
     }
 
     private interval(autoPlay: boolean) {
-        const { time, effect } = this.props
+        const { time, effect, children } = this.props
         if (autoPlay) {
             this.timer = setInterval(() => {
                 const { value } = this.props
                 const { selectIndex } = this.state
-                const length = value.length
+                const length = (value.length || Children.count(children))
                 const status = effect !== 'fade' ? selectIndex === length : selectIndex === length - 1
                 this.handleTabIndex(status ? 0 : selectIndex + 1)
             }, time)
@@ -220,9 +342,9 @@ export default class Carousel extends Component<ICarouselProps, IState> {
     }
 
     private handleAnimate = () => {
-        const { effect, value } = this.props
+        const { effect, value, children } = this.props
         const { selectIndex } = this.state
-        if (selectIndex === value.length && effect !== 'fade') {
+        if (selectIndex === (value.length || Children.count(children)) && effect !== 'fade') {
             this.setState({
                 selectIndex: 0,
                 animate: false
@@ -237,12 +359,12 @@ export default class Carousel extends Component<ICarouselProps, IState> {
     }
 
     private handleTabIndex(index: number) {
-        const { onChnage, value } = this.props
+        const { onChnage, value, children } = this.props
         this.setState({
             selectIndex: index
         })
         if (isFunction(onChnage)) {
-            onChnage(index % value.length)
+            onChnage(index % (value.length || Children.count(children)))
         }
     }
 }

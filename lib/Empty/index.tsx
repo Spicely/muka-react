@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { isUndefined, isNull, isString } from 'muka'
+import { isUndefined, isNull, isString } from 'lodash'
 import { Consumer, RIGHTULR } from '../ConfigProvider'
 import { getClassName } from '../utils'
 import Image from '../Image'

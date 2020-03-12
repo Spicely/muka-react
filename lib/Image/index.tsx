@@ -1,8 +1,10 @@
 
 import React, { Component, CSSProperties } from 'react'
 import { PreLoad, browser } from 'muka'
-import { getClassName } from '../utils'
 import { Consumer } from '../ScrollView'
+import styled, { css } from 'styled-components'
+
+type IFitType = 'fill' | 'contain' | 'cover' | 'none' | 'scale-down'
 
 export interface IImageProps {
     className?: string
@@ -11,6 +13,7 @@ export interface IImageProps {
     offsetBottom?: number
     controller?: Element
     loadingIndicatorSource?: string
+    fit?: IFitType
     onClick?: () => void
 }
 
@@ -24,14 +27,36 @@ const imgObj: { src: string } = {
     src: ''
 }
 
+interface IImageViewProps {
+    imgOpacity: boolean
+    fadeIn: boolean
+    show: boolean
+    fit?: IFitType
+}
+
+const ImageView = styled.img<IImageViewProps>`
+    border: 0;
+    ${({ imgOpacity }) => {
+        if (imgOpacity) return css`opacity: 0;`
+    }}
+    ${({ show }) => {
+        if (show) return css`opacity: 1;`
+    }}
+    ${({ fadeIn }) => {
+        if (fadeIn) return css`animation: fade-in 1.5s forwards;`
+    }}
+    object-fit: ${({ fit }) => fit};
+`
+
 export const setImageLoadingSource = (uri: string) => {
     imgObj.src = uri
 }
 
 export default class Image extends Component<IImageProps, IState> {
 
-    public static defaultProps = {
-        offsetBottom: 100
+    public static defaultProps: IImageProps = {
+        offsetBottom: 100,
+        fit: 'fill'
     }
 
     public state = {
@@ -56,7 +81,16 @@ export default class Image extends Component<IImageProps, IState> {
                     (val) => {
                         this.controller = controller || val.controller
                         return (
-                            <img className={getClassName(`image${opacity ? '' : ' opacity'}${animation && !show ? ' an_fadeIn' : ''}${show ? ' show' : ''}`, className)} src={uri || loadingIndicatorSource || imgObj.src} onClick={onClick} ref={(e: HTMLImageElement) => { this.imageNode = e }} style={style} />
+                            <ImageView
+                                className={className}
+                                imgOpacity={!opacity}
+                                fadeIn={animation && !show}
+                                show={show}
+                                src={uri || loadingIndicatorSource || imgObj.src}
+                                onClick={onClick}
+                                ref={(e: HTMLImageElement) => { this.imageNode = e }}
+                                style={style}
+                            />
                         )
                     }
                 }
@@ -127,7 +161,7 @@ export default class Image extends Component<IImageProps, IState> {
         if (this.controller) {
             top = (this.controller.scrollTop || 0) + browser.GL_SC_HEIGHT
         } else {
-            top = (document.documentElement && document.documentElement.scrollTop || document.body.scrollTop) + browser.GL_SC_HEIGHT
+            top = (document.documentElement.scrollTop || document.body.scrollTop) + browser.GL_SC_HEIGHT
         }
         if (!animation && this.imageNode && this.imageNode.offsetTop - (offsetBottom || 0) - top <= 0) {
             const loading = new PreLoad([src])

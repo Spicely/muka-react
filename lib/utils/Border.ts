@@ -1,9 +1,11 @@
+import { isNumber } from 'lodash'
+import { getUnit } from './index'
 import Color from './Color'
-import ThemeData from './ThemeData'
 
 interface IBorderAll {
     width?: number
-    color?: Color
+    color?: Color,
+    style?: BorderStyle
 }
 
 export class BorderStyle {
@@ -25,7 +27,9 @@ export default class Border {
      * 
      * @param {IBorderAll} data 边框数据
      */
-    public static all(data: IBorderAll = { width: 1, }): Border {
-        return `${(data.width || 1) * ThemeData.ratio + ThemeData.unit} ${BorderStyle.solid} ${data.color}`
+    public static all(data: IBorderAll): Border {
+        return `border:${getUnit((isNumber(data.width) ? data.width : 1))} ${data.style ? data.style.toString() : BorderStyle.none.toString()} ${data.color ? data.color.toString() : Color.fromRGBO(0, 0, 0, 0).toString()};`
     }
+
+    public static none: Border = 'border: none'
 }

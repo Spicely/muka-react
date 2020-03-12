@@ -1,54 +1,48 @@
 import React, { Component, CSSProperties } from 'react'
-import { getClassName, prefix, IStyledProps } from '../utils'
+import styled, { css } from 'styled-components'
+import { AlertThemeData, getRatioUnit, Color } from '../utils'
 import { Consumer } from '../ThemeProvider'
-import styled from 'styled-components'
 import { iconType } from '../Icon'
+import Border, { BorderStyle } from '../utils/Border'
+
+type AlertType = 'success' | 'warning' | 'error'
 
 export interface IAlertProps {
     className?: string
     showIcon?: boolean
     icon?: iconType | JSX.Element
-    type?: 'success' | 'info' | 'warning' | 'warning'
+    type?: AlertType
     title?: string | JSX.Element
     inheritColor?: boolean
     message: string | JSX.Element
     style?: CSSProperties
+    theme?: AlertThemeData
 }
 
 // tslint:disable-next-line: no-empty-interface
 interface IState {
 
 }
-// .type_color(@color) {
-//     border: 1 * @unit solid rgb(@color, 0.4);
-//     background: rgb(@color, 0.2);
 
-//     &.inherit_color {
-//         color: @color;
-//     }
-// }
+interface IAlertBoxProps {
+    alertType?: AlertType
+    inheritColor?: boolean
+}
 
-// &_info {
-//     .type_color(@theme_info_color);
-// }
-
-// &_success {
-//     .type_color(@theme_success_color);
-// }
-
-// &_warning {
-//     .type_color(@theme_warning_color);
-// }
-
-// &_error {
-//     .type_color(@theme_error_color);
-// }
-
-const Div = styled.div<IStyledProps>`
-    padding: ${({ theme }) => 15 * theme.ratio + theme.unit};
+const AlertBox = styled.div<IAlertBoxProps>`
+    padding: ${() => getRatioUnit(15)};
+    ${({ alertType, theme, inheritColor }) => {
+        switch (alertType) {
+            case 'success': return css`${Border.all({ width: 1, style: BorderStyle.solid, color: Color.setOpacity(theme.successColor, 0.4) }).toString()};background:${Color.setOpacity(theme.successColor, 0.2).toString()};${inheritColor ? `color: ${theme.successColor}` : ''}`;
+            case 'warning': return css`${Border.all({ width: 1, style: BorderStyle.solid, color: Color.setOpacity(theme.warningColor, 0.4) }).toString()};background:${Color.setOpacity(theme.warningColor, 0.2).toString()};${inheritColor ? `color: ${theme.warningColor}` : ''}`
+            case 'error': return css`${Border.all({ width: 1, style: BorderStyle.solid, color: Color.setOpacity(theme.errorColor, 0.4) }).toString()};background:${Color.setOpacity(theme.errorColor, 0.2).toString()};${inheritColor ? `color: ${theme.errorColor}` : ''}`
+            default: return css`${Border.all({ width: 1, style: BorderStyle.solid, color: Color.setOpacity(theme.primarySwatch, 0.4) }).toString()};background:${Color.setOpacity(theme.primarySwatch, 0.2).toString()};${inheritColor ? `color: ${theme.primarySwatch}` : ''}`
+        }
+    }}
 `
-const DivChiren = styled.div<IStyledProps>`
-    margin-bottom: ${({ theme }) => 6 * theme.ratio + theme.unit};
+
+const AlertTitle = styled.div`
+    margin-bottom: ${() => getRatioUnit(6)};
 `
 
 export default class Alert extends Component<IAlertProps, IState> {
@@ -56,7 +50,6 @@ export default class Alert extends Component<IAlertProps, IState> {
     public static defaultProps: IAlertProps = {
         showIcon: false,
         inheritColor: false,
-        type: 'info',
         message: ''
     }
 
@@ -66,25 +59,27 @@ export default class Alert extends Component<IAlertProps, IState> {
             <Consumer>
                 {
                     (value) => (
-                        <Div
-                            className={`${prefix} ${type}${inheritColor ? ' inherit_color' : ''} ${className || ''}`}
+                        <AlertBox
+                            className={className}
                             style={style}
+                            alertType={type}
+                            inheritColor={inheritColor}
                             theme={value.theme}
                         >
                             {
                                 title ? (
-                                    <DivChiren
+                                    <AlertTitle
                                         style={{ marginBottom: message ? '' : 0 }}
                                         theme={value.theme}
                                     >
                                         {title}
-                                    </DivChiren>
+                                    </AlertTitle>
                                 ) : null
                             }
                             <div>
                                 {message}
                             </div>
-                        </Div>
+                        </AlertBox>
                     )
                 }
             </Consumer>

@@ -1,5 +1,5 @@
 import React, { Component, DragEvent, CSSProperties } from 'react'
-import { isFunction } from 'muka'
+import { isFunction } from 'lodash'
 import { observer } from './index'
 import { getClassName, prefix } from '../utils'
 

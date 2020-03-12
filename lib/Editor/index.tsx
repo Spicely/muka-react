@@ -1,5 +1,5 @@
 import React, { Component, Fragment } from 'react'
-import { isFunction } from 'muka'
+import { isFunction } from 'lodash'
 import { getClassName, IValue } from '../utils'
 
 export interface IEditorProps {

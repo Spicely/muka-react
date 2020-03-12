@@ -1,5 +1,6 @@
 import React, { Component, DragEvent } from 'react'
-import { isFunction, Observer } from 'muka'
+import { Observer } from 'muka'
+import { isFunction } from 'lodash'
 import DragBox from './dragBox'
 import { getClassName } from '../utils'
 export const observer = new Observer()
@@ -44,7 +45,7 @@ export default class Drag extends Component<IDragProps, any> {
         observer.subscribe('dragLeave', this.handleDragLeave)
     }
 
-    public componentWillMount() {
+    public UNSAFE_componentWillMount() {
         observer.unsubscribe('dragLeave', this.handleDragLeave)
         this.setState = () => {
             return

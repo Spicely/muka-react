@@ -4,7 +4,7 @@ import styled, { css } from 'styled-components'
 import { MenuGroup } from './MenuGroup'
 import { MenuItem } from './MenuItem'
 import { Consumer as ThemeConsumer } from '../ThemeProvider'
-import { transition, IStyledProps, MenuThemeData, ThemeData } from '../utils'
+import { transition, IStyledProps, MenuThemeData, getUnit } from '../utils'
 import { iconType } from '../Icon'
 import Color from '../utils/Color'
 export * from './MenuGroup'
@@ -17,6 +17,7 @@ export interface IMenuProps {
     arrowIcon?: iconType
     arrowIconPos?: 'right' | 'left'
     defaultSelected?: number | string
+    selected?: number | string
     onChange?: (index: number | string) => void
     fieldToUrl?: boolean
     arrowIconColor?: string
@@ -57,13 +58,13 @@ interface IStylePorps extends IStyledProps {
 
 const Ul = styled.ul<IStylePorps>`
     background-color: ${({ menuTheme }) => menuTheme.menuColor.toString()};
-    width: ${({ menuTheme }) => menuTheme.width * ThemeData.ratio + ThemeData.unit};
-    height: ${({ menuTheme }) => menuTheme.height * ThemeData.ratio + ThemeData.unit};
+    width: ${({ menuTheme }) => getUnit(menuTheme.width)};
+    height: ${({ menuTheme }) => getUnit(menuTheme.height)};
     overflow: hidden;
     ${transition(0.2)};
     margin: 0;
     ${({ collapsed }) => {
-        if (collapsed) return css`width: ${52 * ThemeData.ratio + ThemeData.unit};`
+        if (collapsed) return css`width: ${getUnit(52)};`
     }}
 `
 
@@ -73,18 +74,23 @@ export default class Menu extends Component<IMenuProps, IState> {
 
     public static Item = MenuItem
 
-    public state = {
-        field: this.props.defaultSelected === undefined ? '' : this.props.defaultSelected
+    constructor(props: IMenuProps) {
+        super(props)
+        this.state.field = props.defaultSelected === undefined ? '' : props.defaultSelected
+    }
+
+    public state: IState = {
+        field: ''
     }
 
     public render(): JSX.Element {
-        const { className, children, style, theme, collapsed, fieldToUrl, arrowIcon, arrowIconColor, arrowIconPos, fontColor } = this.props
+        const { className, children, style, theme, collapsed, fieldToUrl, arrowIcon, arrowIconColor, arrowIconPos, fontColor, selected } = this.props
+        const { field } = this.state
         return (
             <ThemeConsumer>
                 {
                     (value) => (
                         <Ul
-                            theme={value.theme}
                             className={className}
                             collapsed={collapsed}
                             style={style}
@@ -92,11 +98,11 @@ export default class Menu extends Component<IMenuProps, IState> {
                         >
                             <Provider
                                 value={{
-                                    ...this.state,
+                                    field: selected || field,
                                     onPress: this.handlePress,
                                     collapsed: collapsed || false,
                                     fieldToUrl: fieldToUrl || false,
-                                    arrowIcon: arrowIcon || 'md-arrow-down',
+                                    arrowIcon: arrowIcon || 'ios-arrow-down',
                                     arrowIconColor: arrowIconColor || '#333',
                                     arrowIconPos: arrowIconPos || 'right',
                                     fontColor,

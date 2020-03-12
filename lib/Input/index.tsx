@@ -1,8 +1,8 @@
 import React, { InputHTMLAttributes, Component, ChangeEvent, FocusEvent, CSSProperties } from 'react'
 import styled, { css } from 'styled-components'
-import { omit, isFunction, isEmpty, isNil } from 'lodash'
+import { omit, isFunction, isEmpty, isNil, isNumber } from 'lodash'
 import InputSearch from './search'
-import { getClassName, prefix, IStyledProps, transition, InputThemeData, ThemeData, Color } from '../utils'
+import { getClassName, prefix, IStyledProps, transition, InputThemeData, Color, getUnit } from '../utils'
 import { Consumer } from '../ThemeProvider'
 import Icon from '../Icon'
 
@@ -37,14 +37,15 @@ interface IStyleProps extends IStyledProps {
     inputTheme: InputThemeData
 }
 
-const Int = styled.input<IStyledProps>`
-    padding: 0 ${({ theme }) => 10 * theme.ratio + theme.unit};
+const Int = styled.input<IStyleProps>`
+    padding: 0 ${() => getUnit(10)};
     outline: none;
     height: 100%;
     background: inherit;
-    width: 100%;
+    width: 100% ;
+    color: inherit;
     position: relative;
-    font-size: ${({ theme }) => theme.inputTheme.fontSize * theme.ratio + theme.unit};
+    font-size: ${({ inputTheme, theme }) => getUnit(inputTheme.fontSize || theme.fontSize)};
     ${transition(0.5)};
     -moz-appearance: textfield;
     border: none;
@@ -57,26 +58,26 @@ const Int = styled.input<IStyledProps>`
     }
 
     &::-webkit-input-placeholder {
-        font-size: ${({ theme }) => theme.inputTheme.fontSize * theme.ratio + theme.unit};
+        font-size: ${({ inputTheme, theme }) => getUnit(inputTheme.fontSize || theme.fontSize)};
     }
 
     &:-moz-placeholder {
-        font-size: ${({ theme }) => theme.inputTheme.fontSize * theme.ratio + theme.unit};
+        font-size: ${({ inputTheme, theme }) => getUnit(inputTheme.fontSize || theme.fontSize)};
     }
 
     &::-moz-placeholder {
-        font-size: ${({ theme }) => theme.inputTheme.fontSize * theme.ratio + theme.unit};
+        font-size: ${({ inputTheme, theme }) => getUnit(inputTheme.fontSize || theme.fontSize)};
     }
 
     &:-ms-input-placeholder {
-        font-size: ${({ theme }) => theme.inputTheme.fontSize * theme.ratio + theme.unit};
+        font-size: ${({ inputTheme, theme }) => getUnit(inputTheme.fontSize || theme.fontSize)};
     }
 
     &:disabled {
-        background: ${({ theme }) => theme.inputTheme.inputColor};
+        background: ${({ inputTheme }) => inputTheme.disabledColor.toString()};
 
         &:hover {
-            border-color: ${({ theme }) => theme.primarySwatch};
+            border-color: ${({ theme, inputTheme }) => inputTheme.hoverColor || theme.primarySwatch};
             cursor: not-allowed;
         }
     }
@@ -87,8 +88,12 @@ interface IInitProps {
 }
 
 const IntBox = styled.div<IInitProps>`
-    height: ${({ inputTheme }) => inputTheme.height * ThemeData.ratio + ThemeData.unit};
-    font-size: ${({ inputTheme }) => inputTheme.fontSize * ThemeData.ratio + ThemeData.unit};
+    height: ${({ inputTheme }) => getUnit(inputTheme.height)};
+    ${({ inputTheme }) => {
+        if (!isNil(inputTheme.width)) return css`width: ${getUnit(inputTheme.width)};`
+    }}
+    color: ${({ inputTheme }) => inputTheme.color.toString()};
+    font-size: ${({ inputTheme }) => getUnit(inputTheme.fontSize)};
     position: relative;
     ${transition(0.5)};
     overflow: hidden;
@@ -103,7 +108,9 @@ interface IIntViewProps extends IStyleProps {
 const IntView = styled.div<IIntViewProps>`
     position: relative;
     ${transition(0.5)};
-    border: ${({ inputTheme }) => inputTheme.border.toString()};
+    ${({ inputTheme }) => {
+        if (inputTheme.border) return css`${inputTheme.border.toString()}`
+    }}
 
     ${({ focus, inputTheme, theme }) => {
         if (focus) return css`border-color: ${inputTheme.hoverColor || theme.primarySwatch};`
@@ -115,16 +122,16 @@ const IntView = styled.div<IIntViewProps>`
 `
 
 const PreIcon = styled.div`
-    width: ${() => 35 * ThemeData.ratio + ThemeData.unit};
+    width: ${() => getUnit(35)};
 `
 
 const IntLabel = styled.div`
-     width: ${() => 60 * ThemeData.ratio + ThemeData.unit};
+     width: ${() => getUnit(60)};
 `
 const CloseIcon = styled(Icon)`
     ${transition(0.5)};
     position: absolute;
-    right: ${() => 5 * ThemeData.ratio + ThemeData.unit};
+    right: ${() => getUnit(5)};
     top: 50%;
     transform: translate(0, -50%);
     background: ${({ theme }) => Color.setOpacity(theme.color, 0.25).toString()};
@@ -155,6 +162,7 @@ export default class Input extends Component<IInputProps, IState> {
         const { className, placeholder, placeAnimate, value, closeIconShow, disabled, label, labelClassName, labelStyle, showMaxLength, maxLength, extend, extendClassName, extendStyle, preIcon, style, theme } = this.props
         const { moveToTop, val, focus } = this.state
         const otherProps = omit(this.props, ['className', 'placeholder', 'placeAnimate', 'onFocus', 'onBlur', 'preIcon', 'onClose', 'value', 'closeIconShow', 'labelStyle', 'label', 'labelClassName', 'showMaxLength', 'extend', 'extendStyle', 'extendClassName', 'style'])
+        const status = val.length > 0 || (value || '').toString().length > 0
         return (
             <Consumer>
                 {(data) => (
@@ -173,7 +181,6 @@ export default class Input extends Component<IInputProps, IState> {
                         {placeAnimate && <div className={getClassName(`${prefixClass}_text flex_justify`, moveToTop ? 'active' : '')}>{placeholder}</div>}
                         <IntView
                             className={`flex flex_1 ${disabled ? prefix + 'disabled' : ''}`}
-                            theme={data.theme}
                             focus={focus}
                             inputTheme={theme || data.theme.inputTheme}
                         >
@@ -187,12 +194,12 @@ export default class Input extends Component<IInputProps, IState> {
                             <Int
                                 {...otherProps}
                                 className="flex_1"
-                                theme={data.theme}
                                 placeholder={placeAnimate ? '' : placeholder}
                                 onFocus={this.handleFocus}
                                 onBlur={this.handleBlur}
                                 value={isNil(value) ? val : value}
                                 onChange={this.handleChange}
+                                inputTheme={theme || data.theme.inputTheme}
                                 style={{
                                     paddingRight: (closeIconShow && showMaxLength) ? 63 : (closeIconShow || showMaxLength) ? 24 : '',
                                     paddingLeft: preIcon ? 0 : ''
@@ -201,7 +208,7 @@ export default class Input extends Component<IInputProps, IState> {
                             {(showMaxLength && maxLength) ? <div className={getClassName(`${prefixClass}_max_length flex_justify`)} style={{
                                 right: closeIconShow ? 26 : 5
                             }}>{val.length || (value || '').toString().length}/{maxLength}</div> : null}
-                            {(isNil(value) ? val : true) && closeIconShow && !disabled && (
+                            {status && closeIconShow && !disabled && (
                                 <CloseIcon
                                     onClick={this.handleClose}
                                     icon="ios-close"
@@ -248,7 +255,7 @@ export default class Input extends Component<IInputProps, IState> {
     }
 
     private handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const { onChange, value } = this.props
+        const { onChange } = this.props
         const val = event.target.value
         if (isFunction(onChange)) {
             onChange(event)

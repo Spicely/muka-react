@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { omit } from 'muka'
+import { omit } from 'lodash'
 import Item from '../Item'
 import Input, { IInputProps } from '../Input'
 import { getClassName } from '../utils'
